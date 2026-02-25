@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torn · Investment Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080c10;--panel:#0b1219;--border:#1a2a1f;
+    --green:#00ff88;--green-dim:#00cc6a;--green-glow:rgba(0,255,136,0.15);
+    --red:#ff3860;--amber:#ffb347;--text:#c8e6d0;--muted:#4a6b52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+  h1{font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,32px);font-weight:900;color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.5)}
+  .sub{font-size:10px;color:var(--muted);letter-spacing:0.3em;margin-top:5px}
+  .meta{text-align:right;font-size:11px;color:var(--muted);line-height:2}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);margin-right:5px;animation:blink 2s infinite}
+  .dot.err{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
+  .dot.idle{background:var(--muted);box-shadow:none;animation:none}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .key-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .key-bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;padding:10px 14px;border-radius:4px;outline:none;letter-spacing:0.05em;transition:border-color 0.2s}
+  .key-bar input:focus{border-color:rgba(0,255,136,0.4)}
+  .key-bar input::placeholder{color:var(--muted)}
+  .btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 18px;border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
+  .btn:hover{background:var(--green-glow)}
+  .btn.red{border-color:rgba(255,56,96,0.35);color:var(--red)}
+  .btn.red:hover{background:rgba(255,56,96,0.08)}
+  .key-note{font-size:10px;color:var(--muted);width:100%;line-height:1.7}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:18px 20px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--green),transparent);opacity:0.5}
+  .clabel{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+  .cval{font-family:'Orbitron',monospace;font-size:clamp(16px,2.2vw,24px);font-weight:700}
+  .cval.pos{color:var(--green);text-shadow:0 0 15px rgba(0,255,136,0.3)}
+  .cval.neg{color:var(--red);text-shadow:0 0 15px rgba(255,56,96,0.3)}
+  .cval.neu{color:var(--text)}
+  .csub{font-size:10px;color:var(--muted);margin-top:6px}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+  .sec-head h2{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  .badge{background:var(--green-glow);border:1px solid rgba(0,255,136,0.2);color:var(--green);font-size:10px;padding:2px 8px;border-radius:2px}
+  .inv-list{display:flex;flex-direction:column;gap:10px}
+  .row{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px 20px;display:grid;gap:12px;align-items:center;grid-template-columns:1.6fr repeat(4,1fr);transition:border-color 0.2s}
+  .row:hover{border-color:rgba(0,255,136,0.2)}
+  .row.mature{border-color:rgba(255,179,71,0.4)}
+  .field{display:flex;flex-direction:column;gap:3px}
+  .flabel{font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  .fval{font-size:13px}
+  .fname{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--text)}
+  .fsub{font-size:10px;color:var(--muted)}
+  .pos{color:var(--green)}.neg{color:var(--red)}.amb{color:var(--amber)}
+  .cd{font-family:'Orbitron',monospace;font-size:11px;color:var(--amber)}
+  .cd.done{color:var(--green);animation:blink 1s infinite}
+  .prog{height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:5px}
+  .prog-bar{height:100%;background:linear-gradient(90deg,var(--green-dim),var(--green));border-radius:2px;box-shadow:0 0 6px var(--green);transition:width 1s linear}
+  .strip{display:flex;align-items:center;justify-content:space-between;margin-top:20px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--muted);flex-wrap:wrap;gap:8px}
+  .state{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px;line-height:1.9}
+  .spin{display:block;width:20px;height:20px;border:2px solid rgba(0,255,136,0.2);border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .errtxt{color:var(--red);font-size:11px;margin-top:10px}
+  .rates-bar{padding:10px 16px;background:var(--panel);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--muted);margin-bottom:12px;display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .rate-item{color:var(--green)}
+  .rate-lbl{color:var(--muted);margin-right:4px}
+  select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 8px;border-radius:3px;outline:none}
+  @media(max-width:650px){.row{grid-template-columns:1fr 1fr}.row .field:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>TORN INVESTMENTS</h1>
+      <div class="sub">City Bank &amp; Wealth Tracker</div>
+    </div>
+    <div class="meta">
+      <span class="dot idle" id="dot"></span><span id="stxt">Idle</span><br>
+      Updated: <span id="updated">--</span><br>
+      Next: <span id="nxt">--</span>
+    </div>
+  </header>
+
+  <div class="key-bar">
+    <input type="password" id="keyInput" placeholder="Paste your Torn API key (Limited access or higher)..." autocomplete="off"/>
+    <button class="btn" onclick="saveAndLoad()">&#9654; LOAD</button>
+    <button class="btn red" onclick="clearKey()">CLEAR</button>
+    <span class="key-note">Key stored in browser session memory only — never saved to disk. Requires <strong style="color:var(--green)">Limited</strong> access or higher. &nbsp;|&nbsp; torn.com &rarr; Settings &rarr; API Key</span>
+  </div>
+
+  <div class="strip" style="margin-bottom:20px">
+    <span>Refresh every
+      <select id="intervalSel" onchange="reschedule()">
+        <option value="30">30s</option>
+        <option value="60" selected>1 min</option>
+        <option value="120">2 min</option>
+        <option value="300">5 min</option>
+      </select>
+    </span>
+    <button class="btn" onclick="loadData()">&#8635; REFRESH NOW</button>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="clabel">Amount Invested</div><div class="cval neu" id="cInv">--</div><div class="csub" id="cRate">Rate: --</div></div>
+    <div class="card"><div class="clabel">Profit Accrued</div><div class="cval neu" id="cProfit">--</div></div>
+    <div class="card"><div class="clabel">Total Value</div><div class="cval neu" id="cVal">--</div><div class="csub" id="cRoi">ROI: --</div></div>
+    <div class="card"><div class="clabel">Matures In</div><div class="cval neu" id="cMature">--</div></div>
+  </div>
+
+  <div id="ratesBar" class="rates-bar" style="display:none">
+    <span style="letter-spacing:0.15em;text-transform:uppercase;font-size:9px;color:var(--muted)">Bank Rates:</span>
+  </div>
+
+  <div class="sec-head">
+    <h2>Investment Detail</h2>
+    <span class="badge" id="posN">0</span>
+  </div>
+
+  <div class="inv-list" id="list">
+    <div class="state">Enter your Torn API key above and click <strong>Load</strong>.</div>
+  </div>
+
+  <div class="strip">
+    <span>No backend &nbsp;&middot;&nbsp; Read-only API &nbsp;&middot;&nbsp; Key in session only &nbsp;&middot;&nbsp; <code style="color:var(--green)">GET /v2/user/money</code></span>
+    <span id="cdDisp" style="font-family:'Orbitron',monospace;font-size:11px;color:var(--green)"></span>
+  </div>
+
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>'$'+Math.abs(Math.round(n)).toLocaleString('en-US');
+const pct=n=>(n>=0?'+':'')+n.toFixed(2)+'%';
+let timer=null,cdInt=null,nextAt=0,maturityTs=0,investedAt=0,duration=0;
+
+function getKey(){return sessionStorage.getItem('tornKey')||'';}
+function saveAndLoad(){
+  const k=$('keyInput').value.trim();
+  if(!k){alert('Please paste your API key first.');return;}
+  sessionStorage.setItem('tornKey',k);
+  loadData();
+}
+function clearKey(){
+  sessionStorage.removeItem('tornKey');
+  $('keyInput').value='';
+  $('list').innerHTML='<div class="state">Key cleared.</div>';
+  $('dot').className='dot idle';$('stxt').textContent='Idle';
+  if(timer)clearTimeout(timer);if(cdInt)clearInterval(cdInt);
+  $('nxt').textContent='--';$('cdDisp').textContent='';
+  maturityTs=0;
+}
+function reschedule(){if(getKey())loadData();}
+
+function fmtT(s){
+  if(!s||s<=0)return 'MATURED';
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=s%60;
+  if(h>24){const d=Math.floor(h/24);return d+'d '+(h%24)+'h';}
+  if(h>0)return h+'h '+m+'m';
+  if(m>0)return m+'m '+sc+'s';
+  return sc+'s';
+}
+
+function ticks(){
+  const now=Math.floor(Date.now()/1000);
+  // Main maturity countdown
+  if(maturityTs>0){
+    const rem=Math.max(0,maturityTs-now);
+    $('cMature').textContent=rem<=0?'MATURED':fmtT(rem);
+    $('cMature').className='cval '+(rem<=0?'pos':'amb');
+    const cdEl=$('mainCd');
+    if(cdEl){cdEl.textContent=rem<=0?'MATURED':fmtT(rem);cdEl.className='cd'+(rem<=0?' done':'');}
+    // Progress bar
+    if(duration>0){
+      const pbEl=$('mainPb');
+      if(pbEl){
+        const elapsed=duration-(maturityTs-now);
+        pbEl.style.width=Math.min(100,Math.max(0,(elapsed/duration)*100))+'%';
+      }
+    }
+  }
+  // Next refresh countdown
+  const left=Math.max(0,nextAt-now);
+  $('nxt').textContent=fmtT(left);
+  $('cdDisp').textContent=left>0?'next in '+fmtT(left):'';
+}
+
+async function loadData(){
+  const key=getKey();
+  if(!key){return;}
+  $('dot').className='dot';$('stxt').textContent='Loading...';
+  $('list').innerHTML='<div class="state"><div class="spin"></div>Fetching from Torn...</div>';
+  if(timer)clearTimeout(timer);if(cdInt)clearInterval(cdInt);
+
+  try{
+    // Fetch both money data and bank rates in parallel
+    const [moneyRes, bankRes]=await Promise.all([
+      fetch(`https://api.torn.com/v2/user/money?key=${encodeURIComponent(key)}`),
+      fetch(`https://api.torn.com/torn/?selections=bank&key=${encodeURIComponent(key)}`)
+    ]);
+    const moneyData=await moneyRes.json();
+    const bankData=await bankRes.json();
+
+    if(moneyData.error){
+      const c=moneyData.error.code, m=moneyData.error.error;
+      let hint='';
+      if(c===2||c===1) hint='Re-copy your key from torn.com &rarr; Settings &rarr; API Key.';
+      else if(c===16)  hint='This endpoint needs Limited access or higher.';
+      $('dot').className='dot err';$('stxt').textContent='Error';
+      $('list').innerHTML=`<div class="state"><p style="color:var(--red)">API error ${c}: ${m}</p><p class="errtxt">${hint}</p></div>`;
+      return;
+    }
+
+    $('dot').className='dot';$('stxt').textContent='Live';
+    $('updated').textContent=new Date().toLocaleTimeString();
+
+    const money=moneyData.money||{};
+    const cb=money.city_bank||{};
+
+    // City bank fields from /v2/user/money
+    const invested    = cb.amount        || 0;
+    const profit      = cb.profit        || 0;
+    const interestRate= cb.interest_rate || 0;
+    const until       = cb.until         || 0;   // unix timestamp maturity
+    const investedAtTs= cb.invested_at   || 0;
+    const dur         = cb.duration      || (until&&investedAtTs ? until-investedAtTs : 0);
+    const totalVal    = invested + profit;
+    const roi         = invested ? parseFloat(((profit/invested)*100).toFixed(2)) : 0;
+    const now         = Math.floor(Date.now()/1000);
+    const mature      = until>0 && now>=until;
+
+    // Store for countdown ticks
+    maturityTs  = until;
+    investedAt  = investedAtTs;
+    duration    = dur;
+
+    // Summary cards
+    if(invested>0){
+      $('cInv').textContent=fmt(invested);    $('cInv').className='cval neu';
+      $('cProfit').textContent=(profit>=0?'+':'')+fmt(profit); $('cProfit').className='cval '+(profit>=0?'pos':'neg');
+      $('cVal').textContent=fmt(totalVal);    $('cVal').className='cval pos';
+      $('cRoi').textContent='ROI: '+pct(roi);
+      $('cRate').textContent='Rate: '+(interestRate*100).toFixed(2)+'%';
+      const remNow=Math.max(0,(until||0)-now);
+      $('cMature').textContent=until?(mature?'MATURED':fmtT(remNow)):'No active investment';
+      $('cMature').className='cval '+(mature?'pos':until?'amb':'neu');
+    } else {
+      $('cInv').textContent='$0';  $('cInv').className='cval neu';
+      $('cProfit').textContent='$0'; $('cProfit').className='cval neu';
+      $('cVal').textContent='$0';  $('cVal').className='cval neu';
+      $('cRoi').textContent='ROI: --';
+      $('cRate').textContent='Rate: --';
+      $('cMature').textContent='No investment';$('cMature').className='cval neu';
+    }
+
+    // Bank rates bar
+    const rates=bankData.bank||{};
+    const ratesBar=$('ratesBar');
+    if(Object.keys(rates).length){
+      ratesBar.style.display='flex';
+      ratesBar.innerHTML=`<span style="letter-spacing:0.15em;text-transform:uppercase;font-size:9px;color:var(--muted)">Bank Rates:</span>`
+        +Object.entries(rates).map(([k,v])=>`<span class="rate-item"><span class="rate-lbl">${k}</span>${v}%</span>`).join('');
+    }
+
+    // Detail rows
+    $('posN').textContent=invested>0?'1':'0';
+    let html='';
+
+    if(invested>0){
+      const progBar=dur>0?`<div class="prog"><div class="prog-bar" id="mainPb" style="width:0%"></div></div>`:'';
+      html+=`<div class="row${mature?' mature':''}">
+        <div class="field">
+          <span class="fname">City Bank</span>
+          <span class="fsub">${investedAtTs?'Since '+new Date(investedAtTs*1000).toLocaleDateString():''}</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Invested</span>
+          <span class="fval">${fmt(invested)}</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Profit</span>
+          <span class="fval ${profit>=0?'pos':'neg'}">${profit>=0?'+':''}${fmt(profit)}</span>
+          <span class="fsub">${pct(roi)} &nbsp;@&nbsp; ${(interestRate*100).toFixed(2)}%</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Total Value</span>
+          <span class="fval pos">${fmt(totalVal)}</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Matures</span>
+          <span class="cd" id="mainCd">--</span>
+          ${until?`<span class="fsub">${new Date(until*1000).toLocaleDateString()}</span>`:''}
+          ${progBar}
+        </div>
+      </div>`;
+    }
+
+    // Other wallet balances as info rows
+    const balances=[
+      {label:'Wallet',     val:money.wallet},
+      {label:'Cayman Bank',val:money.cayman_bank},
+      {label:'Vault',      val:money.vault},
+      {label:'Points',     val:money.points, isPoints:true},
+    ].filter(b=>b.val>0);
+
+    if(balances.length){
+      html+=`<div style="margin-top:20px;padding-bottom:8px;border-bottom:1px solid var(--border);font-size:9px;letter-spacing:0.25em;text-transform:uppercase;color:var(--muted)">Other Balances</div>`;
+      balances.forEach(b=>{
+        html+=`<div class="row" style="grid-template-columns:1fr 1fr;padding:12px 20px">
+          <div class="field"><span class="fname" style="font-size:11px">${b.label}</span></div>
+          <div class="field"><span class="fval neu">${b.isPoints?b.val.toLocaleString()+' pts':fmt(b.val)}</span></div>
+        </div>`;
+      });
+    }
+
+    if(!html) html='<div class="state">No City Bank investment found.<br><span style="font-size:10px">Visit the City Bank in-game to invest.</span></div>';
+    $('list').innerHTML=html;
+
+    // Start ticks
+    const interval=parseInt($('intervalSel').value,10);
+    nextAt=now+interval;
+    timer=setTimeout(loadData,interval*1000);
+    cdInt=setInterval(ticks,1000);
+    ticks();
+
+  }catch(err){
+    $('dot').className='dot err';$('stxt').textContent='Error';
+    $('list').innerHTML=`<div class="state"><p>Failed to reach Torn API.</p><p class="errtxt">${err.message}</p></div>`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const k=getKey();
+  if(k){$('keyInput').value='(key saved — click Load to refresh)';loadData();}
+});
+</script>
+</body>
+</html>

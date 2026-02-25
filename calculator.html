@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torn · Investment Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080c10;--panel:#0b1219;--border:#1a2a1f;
+    --green:#00ff88;--green-dim:#00cc6a;--green-glow:rgba(0,255,136,0.15);
+    --red:#ff3860;--amber:#ffb347;--blue:#4fc3f7;
+    --text:#c8e6d0;--muted:#4a6b52;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
+
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+  h1{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,30px);font-weight:900;
+    color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.5)}
+  .sub{font-size:10px;color:var(--muted);letter-spacing:0.3em;margin-top:5px}
+  .nav-link{font-size:11px;color:var(--muted);text-decoration:none;border:1px solid var(--border);
+    padding:8px 16px;border-radius:4px;transition:all 0.2s;align-self:center}
+  .nav-link:hover{color:var(--green);border-color:rgba(0,255,136,0.3)}
+
+  .key-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .key-bar input{flex:1;min-width:200px;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;
+    padding:10px 14px;border-radius:4px;outline:none;transition:border-color 0.2s}
+  .key-bar input:focus{border-color:rgba(0,255,136,0.4)}
+  .key-bar input::placeholder{color:var(--muted)}
+  .btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 18px;
+    border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
+  .btn:hover{background:var(--green-glow)}
+  .key-note{font-size:10px;color:var(--muted);width:100%;line-height:1.7}
+
+  .info-strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    margin-bottom:16px;font-size:11px;min-height:42px}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);margin-right:6px;animation:blink 2s infinite}
+  .dot.idle{background:var(--muted);box-shadow:none;animation:none}
+  .dot.err{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .rate-pill{color:var(--green)}.rate-lbl{color:var(--muted);margin-right:3px}
+
+  .bonus-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;align-items:center;font-size:11px}
+  .bonus-badge{padding:7px 14px;border-radius:4px;border:1px solid;display:flex;align-items:center;gap:8px}
+  .bonus-badge.active{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.07);color:var(--green)}
+  .bonus-badge.inactive{border-color:var(--border);color:var(--muted)}
+  .bonus-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .bonus-badge.active .bonus-dot{background:var(--green);box-shadow:0 0 6px var(--green)}
+  .bonus-badge.inactive .bonus-dot{background:var(--muted)}
+  .badge-sub{font-size:9px;opacity:0.7;margin-left:2px}
+
+  .amount-box{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    padding:22px 24px;margin-bottom:24px}
+  .amount-box label{font-size:9px;letter-spacing:0.25em;text-transform:uppercase;
+    color:var(--muted);display:block;margin-bottom:10px}
+  .amount-input{width:100%;background:var(--bg);border:1px solid var(--border);
+    color:var(--green);font-family:'Orbitron',monospace;
+    font-size:clamp(18px,3vw,28px);font-weight:700;
+    padding:14px 16px;border-radius:4px;outline:none;transition:border-color 0.2s}
+  .amount-input:focus{border-color:rgba(0,255,136,0.5)}
+  .amount-input::placeholder{color:var(--muted);font-size:14px;font-family:'Share Tech Mono',monospace}
+  .parsed{font-size:11px;color:var(--muted);margin-top:8px;min-height:18px}
+  .parsed span{color:var(--green)}
+  .shortcuts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .shortcuts button{background:none;border:1px solid var(--border);color:var(--muted);
+    font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 12px;
+    border-radius:3px;cursor:pointer;transition:all 0.2s}
+  .shortcuts button:hover{border-color:var(--green);color:var(--green);background:var(--green-glow)}
+
+  .table-wrap{overflow-x:auto;margin-bottom:20px;border:1px solid var(--border);border-radius:4px}
+  table{width:100%;border-collapse:collapse;min-width:620px}
+  thead tr{background:rgba(0,255,136,0.04);border-bottom:2px solid var(--border)}
+  thead th{padding:13px 18px;text-align:left;font-size:9px;letter-spacing:0.2em;
+    text-transform:uppercase;font-weight:400;white-space:nowrap}
+  th.h-period{color:var(--muted)}
+  th.h-reg{color:var(--text)}
+  th.h-tci{color:var(--blue)}
+  th.h-mer{color:var(--amber)}
+  th.h-both{color:var(--green)}
+
+  tbody tr{border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s}
+  tbody tr:last-child{border-bottom:none}
+  tbody tr:hover{background:rgba(255,255,255,0.02)}
+  tbody tr.best{background:#0b1a10}
+
+  td{padding:15px 18px;vertical-align:top}
+  td.period-cell{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;
+    color:var(--muted);white-space:nowrap;vertical-align:middle}
+  tr.best td.period-cell{color:var(--green)}
+  .best-tag{display:inline-block;font-size:7px;letter-spacing:0.15em;color:var(--green);
+    border:1px solid rgba(0,255,136,0.35);padding:1px 5px;border-radius:2px;
+    margin-left:7px;vertical-align:middle;font-family:'Share Tech Mono',monospace}
+
+  .pval{font-size:15px;font-weight:700;font-family:'Orbitron',monospace}
+  .pval.reg{color:var(--text)}
+  .pval.tci{color:var(--blue)}
+  .pval.mer{color:var(--amber)}
+  .pval.both{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.25)}
+  .pdaily{font-size:10px;margin-top:3px}
+  .pdaily.reg{color:rgba(200,230,208,0.45)}
+  .pdaily.tci{color:rgba(79,195,247,0.55)}
+  .pdaily.mer{color:rgba(255,179,71,0.55)}
+  .pdaily.both{color:rgba(0,255,136,0.5)}
+
+  .strip{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    font-size:10px;color:var(--muted);flex-wrap:wrap;gap:8px}
+  .placeholder{text-align:center;padding:48px 20px;color:var(--muted);font-size:12px;line-height:2}
+
+  @media(max-width:500px){.amount-input{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>INVESTMENT CALCULATOR</h1>
+      <div class="sub">Torn City Bank &mdash; Projected Returns</div>
+    </div>
+    <a class="nav-link" href="index.html">&larr; Portfolio</a>
+  </header>
+
+  <div class="key-bar">
+    <input type="password" id="keyInput" placeholder="Torn API key (Limited access or higher)..." autocomplete="off"/>
+    <button class="btn" onclick="fetchAll()">&#9654; FETCH DATA</button>
+    <span class="key-note">Fetches live bank rates, your TCI stock holdings, and your Bank Investment merits. Key stored in session memory only.</span>
+  </div>
+
+  <div class="info-strip" id="infoStrip">
+    <span class="dot idle" id="dot"></span>
+    <span id="infoLabel" style="color:var(--muted)">Enter your API key and click Fetch Data.</span>
+  </div>
+
+  <div class="bonus-row" id="bonusRow" style="display:none">
+    <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted)">Your bonuses:</span>
+    <div class="bonus-badge inactive" id="badgeTci">
+      <span class="bonus-dot"></span>
+      <span>TCI +10% <span class="badge-sub" id="tciInfo"></span></span>
+    </div>
+    <div class="bonus-badge inactive" id="badgeMerits">
+      <span class="bonus-dot"></span>
+      <span>Bank Merits <span class="badge-sub" id="meritsInfo"></span></span>
+    </div>
+  </div>
+
+  <div class="amount-box">
+    <label>Amount to Invest</label>
+    <input class="amount-input" type="text" id="amountInput"
+      placeholder="e.g. 2b, 500m, 1,500,000,000" oninput="onAmount()" />
+    <div class="parsed" id="parsedAmt"></div>
+    <div class="shortcuts">
+      <button onclick="setAmt(1e6)">1M</button>
+      <button onclick="setAmt(10e6)">10M</button>
+      <button onclick="setAmt(50e6)">50M</button>
+      <button onclick="setAmt(100e6)">100M</button>
+      <button onclick="setAmt(250e6)">250M</button>
+      <button onclick="setAmt(500e6)">500M</button>
+      <button onclick="setAmt(1e9)">1B</button>
+      <button onclick="setAmt(2e9)">2B</button>
+      <button onclick="setAmt(5e9)">5B</button>
+      <button onclick="setAmt(10e9)">10B</button>
+      <button onclick="setAmt(50e9)">50B</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="h-period">Period</th>
+          <th class="h-reg">Regular</th>
+          <th class="h-tci" id="hTci">TCI Only (+10%)</th>
+          <th class="h-mer" id="hMer">10/10 Merits (+50%)</th>
+          <th class="h-both" id="hBoth">Merits + TCI (+65%)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="5" class="placeholder">Enter an amount above to see projected returns.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="strip">
+    <span>APR &times; days/365 &nbsp;&middot;&nbsp; TCI = +10% &nbsp;&middot;&nbsp; Each merit level = +5% (max 10/10 = +50%) &nbsp;&middot;&nbsp; Both = multiplicative</span>
+    <span id="fetchedAt" style="color:var(--muted)"></span>
+  </div>
+
+</div>
+<script>
+const $ = id => document.getElementById(id);
+
+const TCI_ID       = 2;        // TCI stock ID in Torn
+const TCI_NEEDED   = 1000000;  // shares needed for bonus
+const MERIT_MAX    = 10;       // max merit level for bank investment
+
+const PERIODS = [
+  { key:'1w', label:'1 Week',   days:7  },
+  { key:'2w', label:'2 Weeks',  days:14 },
+  { key:'1m', label:'1 Month',  days:30 },
+  { key:'2m', label:'2 Months', days:60 },
+  { key:'3m', label:'3 Months', days:90 },
+];
+
+let liveRates  = {};
+let tciShares  = 0;
+let meritLvl   = 0;
+
+function getKey(){ return sessionStorage.getItem('tornCalcKey')||''; }
+
+window.addEventListener('DOMContentLoaded', () => {
+  const k = getKey();
+  if(k){ $('keyInput').value='(saved)'; fetchAll(); }
+});
+
+async function fetchAll(){
+  const raw = $('keyInput').value.trim();
+  const key = (raw && raw!=='(saved)') ? raw : getKey();
+  if(!key){ alert('Please enter your Torn API key.'); return; }
+  sessionStorage.setItem('tornCalcKey', key);
+
+  $('dot').className = 'dot';
+  $('infoLabel').textContent = 'Fetching rates, stocks & merits...';
+
+  try {
+    const enc = encodeURIComponent(key);
+    const [bankR, stocksR, meritsR, allMeritsR] = await Promise.all([
+      fetch(`https://api.torn.com/torn/?selections=bank&key=${enc}`),
+      fetch(`https://api.torn.com/v2/user/stocks?key=${enc}`),
+      fetch(`https://api.torn.com/v2/user/merits?key=${enc}`),
+      fetch(`https://api.torn.com/v2/torn/merits?key=${enc}`),
+    ]);
+    const bankD     = await bankR.json();
+    const stocksD   = await stocksR.json();
+    const meritsD   = await meritsR.json();
+    const allMeritsD= await allMeritsR.json();
+
+    // Rates
+    if(bankD.error){
+      $('dot').className='dot err';
+      $('infoLabel').textContent=`API error ${bankD.error.code}: ${bankD.error.error}`;
+      return;
+    }
+    liveRates = bankD.bank || {};
+
+    // TCI
+    tciShares = 0;
+    if(!stocksD.error){
+      const holding = (stocksD.stocks||[]).find(s => s.id === TCI_ID);
+      tciShares = holding ? (holding.shares||0) : 0;
+    }
+
+    // Bank investment merits — find merit ID by name first
+    meritLvl = 0;
+    if(!allMeritsD.error && !meritsD.error){
+      const allList = allMeritsD.merits || [];
+      const bankMerit = allList.find(m => m.name && m.name.toLowerCase().includes('bank investment'));
+      if(bankMerit){
+        const userList = meritsD.merits?.upgrades || [];
+        const found = userList.find(m => m.id === bankMerit.id);
+        meritLvl = found ? (found.level||0) : 0;
+      }
+    }
+
+    // Update UI
+    $('dot').className = 'dot';
+    $('fetchedAt').textContent = 'Updated ' + new Date().toLocaleTimeString();
+
+    const rateHtml = Object.entries(liveRates)
+      .map(([k,v])=>`<span class="rate-pill"><span class="rate-lbl">${k}</span>${v}%</span>`)
+      .join('');
+    $('dot').className = 'dot';
+
+$('infoLabel').innerHTML =
+  `<span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-right:6px">
+     Live APR:
+   </span>` + rateHtml;
+
+    // Bonus badges
+    $('bonusRow').style.display = 'flex';
+    const hasTci    = tciShares >= TCI_NEEDED;
+    const hasMerits = meritLvl >= MERIT_MAX;
+    $('badgeTci').className   = 'bonus-badge ' + (hasTci?'active':'inactive');
+    $('tciInfo').textContent  = `(${(tciShares/1e6).toFixed(2)}M / 1M needed)`;
+    $('badgeMerits').className = 'bonus-badge ' + (hasMerits?'active':'inactive');
+    $('meritsInfo').textContent = `(${meritLvl}/${MERIT_MAX})`;
+
+    // Update column headers with actual merit level
+    // Always show full bonus columns — highlight based on user's actual status
+    $('hMer').textContent  = `10/10 Merits (+50%)`;
+    $('hBoth').textContent = `Merits + TCI (+65%)`;
+
+    runCalc();
+  } catch(e){
+    $('dot').className='dot err';
+    $('infoLabel').textContent='Error: '+e.message;
+  }
+}
+
+// Amount helpers
+function parseAmt(s){
+  s=s.replace(/,/g,'').trim().toLowerCase();
+  if(/^[\d.]+b(illion)?$/.test(s)) return parseFloat(s)*1e9;
+  if(/^[\d.]+m(illion)?$/.test(s)) return parseFloat(s)*1e6;
+  if(/^[\d.]+k$/.test(s))          return parseFloat(s)*1e3;
+  return parseFloat(s)||0;
+}
+function fmtFull(n){ return '$'+Math.round(n).toLocaleString('en-US'); }
+function fmtShort(n){
+  if(n>=1e9) return '$'+(n/1e9).toFixed(3).replace(/\.?0+$/,'')+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1).replace(/\.?0+$/,'')+'K';
+  return fmtFull(n);
+}
+function setAmt(n){ $('amountInput').value=Math.round(n).toLocaleString('en-US'); onAmount(); }
+function onAmount(){
+  const a=parseAmt($('amountInput').value);
+  $('parsedAmt').innerHTML = a>0 ? 'Calculating for: <span>'+fmtFull(a)+'</span>' : '';
+  runCalc();
+}
+
+function runCalc(){
+  const amount = parseAmt($('amountInput').value);
+  const tbody  = $('tbody');
+
+  if(!amount||amount<=0){
+    tbody.innerHTML='<tr><td colspan="5" class="placeholder">Enter an amount above to see projected returns.</td></tr>';
+    return;
+  }
+  if(!Object.keys(liveRates).length){
+    tbody.innerHTML='<tr><td colspan="5" class="placeholder">Fetch live rates first using your API key above.</td></tr>';
+    return;
+  }
+
+  // Torn rounds profits to nearest $200,000
+  const tornRound = n => Math.round(n / 200000) * 200000;
+
+  // Multipliers: TCI=+10%, each merit level=+5% (max 10=+50%), both=multiplicative=+65%
+  // Always show all 4 columns with Torn's fixed multipliers
+  // (matches the in-game bank investment table exactly)
+  const tciMult   = 1.10;   // TCI stock: +10%
+  const meritMult = 1.50;   // 10/10 Bank Investment merits: +50%
+  const bothMult  = 1.65;   // Both together: +65%
+
+  // Find best period by regular profit
+  let bestProfit = 0;
+  PERIODS.forEach(p => {
+    const r = liveRates[p.key]; if(r==null) return;
+    const profit = tornRound(amount*(r/100)*(p.days/365));
+    if(profit>bestProfit) bestProfit=profit;
+  });
+
+  let html = '';
+  PERIODS.forEach(p => {
+    const r = liveRates[p.key]; if(r==null) return;
+    const base  = amount*(r/100)*(p.days/365);
+   const pReg  = tornRound(base);          // keep Torn rounding for regular
+const pTci  = base * tciMult;           // exact
+const pMer  = base * meritMult;         // exact
+const pBoth = base * bothMult;          // exact
+    const best  = Math.abs(pReg-bestProfit)<1;
+
+    const cell = (profit, cls) =>
+      `<td><div class="pval ${cls}">${fmtFull(profit)}</div>`+
+      `<div class="pdaily ${cls}">${fmtShort(profit/p.days)}/day</div></td>`;
+
+    html += `<tr class="${best?'best':''}">
+      <td class="period-cell">${p.label}${best?'<span class="best-tag">BEST</span>':''}</td>
+      ${cell(base, 'reg')}
+      ${cell(pTci, 'tci')}
+      ${cell(pMer, 'mer')}
+      ${cell(pBoth,'both')}
+    </tr>`;
+  });
+
+  tbody.innerHTML = html || '<tr><td colspan="5" class="placeholder">No rate data.</td></tr>';
+}
+</script>
+</body>
+</html>
