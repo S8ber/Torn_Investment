@@ -235,16 +235,17 @@ async function fetchAll(){
 
   try {
     const enc = encodeURIComponent(key);
-    const [bankR, stocksR, meritsR, allMeritsR] = await Promise.all([
+    const [bankR, stocksR, meritsR] = await Promise.all([
       fetch(`https://api.torn.com/torn/?selections=bank&key=${enc}`),
       fetch(`https://api.torn.com/v2/user/stocks?key=${enc}`),
-      fetch(`https://api.torn.com/v2/user/merits?key=${enc}`),
-      fetch(`https://api.torn.com/v2/torn/merits?key=${enc}`),
+      fetch(`https://api.torn.com/v2/user/merits?key=${enc}`)
     ]);
-    const bankD     = await bankR.json();
-    const stocksD   = await stocksR.json();
-    const meritsD   = await meritsR.json();
-    const allMeritsD= await allMeritsR.json();
+
+    const bankD   = await bankR.json();
+    const stocksD = await stocksR.json();
+    const meritsD = await meritsR.json();
+
+    console.log("MERITS RESPONSE:", meritsD);
 
     // Rates
     if(bankD.error){
@@ -254,24 +255,28 @@ async function fetchAll(){
     }
     liveRates = bankD.bank || {};
 
-    // TCI
-    tciShares = 0;
-    if(!stocksD.error){
-      const holding = (stocksD.stocks||[]).find(s => s.id === TCI_ID);
-      tciShares = holding ? (holding.shares||0) : 0;
-    }
+   // ---- TCI ----
+tciShares = 0;
+if (!stocksD.error && stocksD.stocks) {
+  const tci = stocksD.stocks[TCI_ID];
+  if (tci && typeof tci.shares === "number") {
+    tciShares = tci.shares;
+  }
+}
 
-    // Bank investment merits — find merit ID by name first
-    meritLvl = 0;
-    if(!allMeritsD.error && !meritsD.error){
-      const allList = allMeritsD.merits || [];
-      const bankMerit = allList.find(m => m.name && m.name.toLowerCase().includes('bank investment'));
-      if(bankMerit){
-        const userList = meritsD.merits?.upgrades || [];
-        const found = userList.find(m => m.id === bankMerit.id);
-        meritLvl = found ? (found.level||0) : 0;
-      }
-    }
+// ---- Bank Interest Merits ----
+meritLvl = 0;
+
+if (!meritsD.error && meritsD.merits && Array.isArray(meritsD.merits.upgrades)) {
+
+  const upgrades = meritsD.merits.upgrades;
+
+  const bankMerit = upgrades.find(m => m.id === 7); // ID 7 = Bank Interest
+
+  if (bankMerit && typeof bankMerit.level === "number") {
+    meritLvl = bankMerit.level;
+  }
+}
 
     // Update UI
     $('dot').className = 'dot';
@@ -350,8 +355,8 @@ function runCalc(){
   // Always show all 4 columns with Torn's fixed multipliers
   // (matches the in-game bank investment table exactly)
   const tciMult   = 1.10;   // TCI stock: +10%
-  const meritMult = 1.50;   // 10/10 Bank Investment merits: +50%
-  const bothMult  = 1.65;   // Both together: +65%
+  const meritMult = 1 + (meritLvl * 0.05);
+  const bothMult  = (1.10) * meritMult;
 
   // Find best period by regular profit
   let bestProfit = 0;
