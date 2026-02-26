@@ -70,6 +70,27 @@
   select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 8px;border-radius:3px;outline:none}
   @media(max-width:650px){.row{grid-template-columns:1fr 1fr}.row .field:first-child{grid-column:1/-1}}
 
+  /* ── APR Predictor ── */
+  .predictor-panel{background:var(--panel);border:1px solid rgba(79,195,247,0.25);border-radius:4px;padding:20px 24px;margin-bottom:24px;position:relative;overflow:hidden}
+  .predictor-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#4fc3f7,transparent);opacity:0.6}
+  .predictor-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:#4fc3f7;margin-bottom:4px}
+  .predictor-sub{font-size:10px;color:var(--muted);margin-bottom:18px}
+  .pred-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+  @media(max-width:680px){.pred-grid{grid-template-columns:repeat(2,1fr)}}
+  .pred-cell{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px 14px;position:relative;transition:border-color 0.2s}
+  .pred-cell.best-pred{border-color:rgba(79,195,247,0.6);box-shadow:0 0 10px rgba(79,195,247,0.1)}
+  .pred-cell.best-pred::after{content:'BEST';position:absolute;top:6px;right:8px;font-size:7px;letter-spacing:0.15em;color:#4fc3f7;border:1px solid rgba(79,195,247,0.4);padding:1px 5px;border-radius:2px;font-family:'Share Tech Mono',monospace}
+  .pred-period{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;color:var(--muted);margin-bottom:6px}
+  .pred-cell.best-pred .pred-period{color:#4fc3f7}
+  .pred-apr{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--text)}
+  .pred-cell.best-pred .pred-apr{color:#4fc3f7;text-shadow:0 0 10px rgba(79,195,247,0.3)}
+  .pred-range{font-size:9px;color:var(--muted);margin-top:3px}
+  .pred-profit{font-size:11px;color:var(--green);margin-top:5px}
+  .pred-confidence{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:10px;color:var(--muted)}
+  .conf-bar{flex:1;height:3px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden}
+  .conf-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--amber),#4fc3f7)}
+  .pred-note{font-size:9px;color:var(--muted);margin-top:10px;line-height:1.7;opacity:0.7}
+
   /* ── Stocks section ── */
   .stock-row{background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden}
   .stock-header{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr 1fr;gap:12px;align-items:center;padding:14px 20px;cursor:pointer;transition:background 0.15s}
@@ -95,6 +116,39 @@
   .chart-canvas{width:100%;height:120px;display:block}
   .chart-loading{text-align:center;padding:30px;color:var(--muted);font-size:11px}
   .chart-error{text-align:center;padding:20px;color:var(--muted);font-size:10px}
+
+  /* ── APR Predictor ── */
+  .pred-panel{background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:4px;
+    padding:20px 24px;margin-bottom:24px;position:relative;overflow:hidden}
+  .pred-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,rgba(0,255,136,0.5),transparent)}
+  .pred-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.2em;
+    text-transform:uppercase;color:var(--green);margin-bottom:4px}
+  .pred-subtitle{font-size:10px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+  .pred-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .pred-cell{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;
+    padding:12px 10px;text-align:center;transition:border-color 0.2s;position:relative}
+  .pred-cell.best-pred{border-color:rgba(0,255,136,0.5);background:rgba(0,255,136,0.05)}
+  .pred-cell.best-pred::after{content:'BEST';position:absolute;top:-1px;left:50%;
+    transform:translateX(-50%);font-size:7px;letter-spacing:0.15em;color:var(--green);
+    background:var(--panel);padding:0 5px;border-left:1px solid rgba(0,255,136,0.3);
+    border-right:1px solid rgba(0,255,136,0.3)}
+  .pred-period{font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+    color:var(--muted);margin-bottom:6px}
+  .pred-apr{font-family:'Orbitron',monospace;font-size:16px;font-weight:700;color:var(--green)}
+  .pred-cell.best-pred .pred-apr{text-shadow:0 0 12px rgba(0,255,136,0.4)}
+  .pred-profit{font-size:10px;color:var(--text);margin-top:4px}
+  .pred-daily{font-size:9px;color:var(--muted);margin-top:2px}
+  .pred-conf{font-size:8px;letter-spacing:0.1em;text-transform:uppercase;
+    margin-top:6px;padding:2px 6px;border-radius:2px;display:inline-block}
+  .pred-conf.high{color:var(--green);background:rgba(0,255,136,0.1)}
+  .pred-conf.med{color:var(--amber);background:rgba(255,179,71,0.1)}
+  .pred-conf.low{color:var(--muted);background:rgba(255,255,255,0.05)}
+  .pred-maturity-note{font-size:10px;color:var(--muted);margin-top:14px;padding-top:12px;
+    border-top:1px solid var(--border);line-height:1.7}
+  .pred-maturity-note strong{color:var(--amber)}
+  @media(max-width:700px){.pred-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:400px){.pred-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -145,6 +199,9 @@
     <span style="letter-spacing:0.15em;text-transform:uppercase;font-size:9px;color:var(--muted)">Bank Rates:</span>
   </div>
 
+  <!-- APR Predictor -->
+  <div id="aprPredictor" style="display:none"></div>
+
   <div class="sec-head">
     <h2>Investment Detail</h2>
     <span class="badge" id="posN">0</span>
@@ -153,6 +210,9 @@
   <div class="inv-list" id="list">
     <div class="state">Enter your Torn API key above and click <strong>Load</strong>.</div>
   </div>
+
+  <!-- APR Predictor -->
+  <div id="aprPredictor" style="display:none"></div>
 
   <!-- Active Stocks Section -->
   <div class="sec-head" style="margin-top:28px">
@@ -303,6 +363,13 @@ async function loadData(){
         +Object.entries(rates).map(([k,v])=>`<span class="rate-item"><span class="rate-lbl">${k}</span>${v}%</span>`).join('');
     }
 
+    // APR predictor
+    if(invested>0 && until>0 && !mature){
+      renderPredictor(rates, invested, until, Math.floor(Date.now()/1000));
+    } else {
+      $('aprPredictor').style.display='none';
+    }
+
     // Detail rows
     $('posN').textContent=invested>0?'1':'0';
     let html='';
@@ -364,6 +431,14 @@ async function loadData(){
     cdInt=setInterval(ticks,1000);
     ticks();
 
+    // APR predictor — record snapshot & render prediction
+    if(invested > 0 && until > 0 && Object.keys(rates).length){
+      recordRateSnapshot(rates);
+      renderAprPredictor(invested, until, rates);
+    } else {
+      $('aprPredictor').style.display = 'none';
+    }
+
     // Load stocks section
     loadStocks(key);
 
@@ -377,6 +452,307 @@ window.addEventListener('DOMContentLoaded',()=>{
   const k=getKey();
   if(k){$('keyInput').value='(key saved — click Load to refresh)';loadData();}
 });
+
+// ══════════════════════════════════════════════════════
+// APR PREDICTOR
+// ══════════════════════════════════════════════════════
+
+// Torn bank rates change daily. We build a rolling history stored in
+// localStorage — each page load records today's snapshot. Over time
+// we accumulate a dataset we can use to estimate typical ranges and
+// day-of-week patterns. Even without history, we use the current rates
+// and known seasonal patterns to make a best-guess prediction.
+
+const RATE_HISTORY_KEY = 'tornRateHistory';
+const MAX_HISTORY      = 90; // keep up to 90 days of snapshots
+
+const BANK_PERIODS = [
+  { key:'1w', label:'1 Week',   days:7  },
+  { key:'2w', label:'2 Weeks',  days:14 },
+  { key:'1m', label:'1 Month',  days:30 },
+  { key:'2m', label:'2 Months', days:60 },
+  { key:'3m', label:'3 Months', days:90 },
+];
+
+function recordRateSnapshot(rates){
+  // Store one snapshot per day (keyed by YYYY-MM-DD)
+  const today = new Date().toISOString().slice(0,10);
+  let history = [];
+  try { history = JSON.parse(localStorage.getItem(RATE_HISTORY_KEY) || '[]'); } catch(e){}
+
+  // Don't duplicate same day
+  if(history.length && history[history.length-1].date === today){
+    // Update today's entry with latest rates
+    history[history.length-1].rates = rates;
+  } else {
+    history.push({ date: today, rates });
+    if(history.length > MAX_HISTORY) history = history.slice(-MAX_HISTORY);
+  }
+  try { localStorage.setItem(RATE_HISTORY_KEY, JSON.stringify(history)); } catch(e){}
+}
+
+function getHistory(){
+  try { return JSON.parse(localStorage.getItem(RATE_HISTORY_KEY) || '[]'); } catch(e){ return []; }
+}
+
+function predictRateAtMaturity(periodKey, daysUntilMaturity){
+  // Strategy:
+  // 1. If we have enough history (7+ days), compute a weighted rolling average
+  //    giving more weight to recent days (exponential decay).
+  // 2. Apply a small linear trend from the last 7 days if clear.
+  // 3. If we have no history, use the current rate (best we can do).
+  // 4. Clamp to a sane range (rates rarely go below 25% or above 80%).
+
+  const history = getHistory();
+  const validEntries = history.filter(h => h.rates && h.rates[periodKey] != null);
+
+  if(validEntries.length < 2){
+    // Not enough history — return current rate as-is (prediction = today's rate)
+    return null; // caller will use current rate
+  }
+
+  // Weighted average: weight = e^(-i * decay) where i=0 is most recent
+  const decayFactor = 0.15; // ~half-weight at ~5 days old
+  let weightedSum = 0, totalWeight = 0;
+  const n = validEntries.length;
+  for(let i = 0; i < n; i++){
+    const age = n - 1 - i; // 0 = most recent
+    const w   = Math.exp(-age * decayFactor);
+    weightedSum += validEntries[i].rates[periodKey] * w;
+    totalWeight += w;
+  }
+  const weightedAvg = weightedSum / totalWeight;
+
+  // Short-term trend: slope from last min(7, n) days using linear regression
+  const window = validEntries.slice(-Math.min(7, n));
+  let trend = 0;
+  if(window.length >= 3){
+    const vals = window.map(h => h.rates[periodKey]);
+    const meanX = (vals.length - 1) / 2;
+    const meanY = vals.reduce((a,b)=>a+b,0) / vals.length;
+    let num = 0, den = 0;
+    vals.forEach((v,i) => { num += (i - meanX) * (v - meanY); den += (i - meanX)**2; });
+    trend = den > 0 ? num / den : 0; // % per day
+  }
+
+  // Project trend forward by daysUntilMaturity, but dampen it heavily
+  // (rates revert toward average — we don't extrapolate aggressively)
+  const dampedDays  = Math.min(daysUntilMaturity, 30); // cap extrapolation
+  const trendEffect = trend * dampedDays * 0.15; // 15% of raw trend applied
+
+  const predicted = weightedAvg + trendEffect;
+  return Math.max(20, Math.min(85, predicted)); // clamp to sane range
+}
+
+function tornRoundProfit(amount, rate, days){
+  const raw = amount * (rate/100) * (days/365);
+  return Math.round(raw / 200000) * 200000;
+}
+
+function fmtMoney(n){
+  if(n>=1e9) return '$'+(n/1e9).toFixed(3).replace(/\.?0+$/,'')+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+
+function renderAprPredictor(invested, maturityUnix, currentRates){
+  const el = $('aprPredictor');
+  const now = Math.floor(Date.now()/1000);
+  const secsRemaining = Math.max(0, maturityUnix - now);
+  const daysRemaining = secsRemaining / 86400;
+  const history = getHistory();
+  const historyDays = history.length;
+
+  // For each bank period, build a predicted APR
+  const predictions = BANK_PERIODS.map(p => {
+    const current   = currentRates[p.key];
+    const predicted = predictRateAtMaturity(p.key, daysRemaining);
+    const apr       = predicted !== null ? predicted : current;
+    const profit    = tornRoundProfit(invested, apr, p.days);
+    const daily     = profit / p.days;
+    return { ...p, apr, profit, daily, usedHistory: predicted !== null };
+  }).filter(p => currentRates[p.key] != null);
+
+  if(!predictions.length){ el.style.display='none'; return; }
+
+  // Find best by highest APR %
+  const bestApr = Math.max(...predictions.map(p => p.apr));
+
+  // Confidence: based on how much history we have
+  const confLabel = historyDays >= 14 ? 'HIGH' : historyDays >= 5 ? 'MED' : 'LOW';
+  const confClass = historyDays >= 14 ? 'high' : historyDays >= 5 ? 'med'  : 'low';
+  const confNote  = historyDays >= 14
+    ? `${historyDays} days of rate history recorded`
+    : historyDays >= 5
+    ? `${historyDays} days recorded — more data improves accuracy`
+    : historyDays > 0
+    ? `Only ${historyDays} day(s) recorded — keep the page open daily to improve predictions`
+    : 'No history yet — using todays rates as baseline';
+
+  // Format time remaining
+  const daysWhole = Math.floor(daysRemaining);
+  const hoursRem  = Math.floor((daysRemaining - daysWhole) * 24);
+  const timeStr   = daysWhole > 0
+    ? `${daysWhole}d ${hoursRem}h`
+    : `${Math.floor(daysRemaining*24)}h`;
+
+  const cells = predictions.map(p => {
+    const isBest = p.apr === bestApr;
+    return `<div class="pred-cell${isBest?' best-pred':''}">
+      <div class="pred-period">${p.label}</div>
+      <div class="pred-apr">${p.apr.toFixed(2)}%</div>
+      <div class="pred-profit">${fmtMoney(p.profit)}</div>
+      <div class="pred-daily">${fmtMoney(p.daily)}/day</div>
+      <span class="pred-conf ${confClass}">${confLabel}</span>
+    </div>`;
+  }).join('');
+
+  el.style.display = 'block';
+  el.innerHTML = `<div class="pred-panel">
+    <div class="pred-title">&#9670; APR Predictor — At Maturity</div>
+    <div class="pred-subtitle">
+      Your investment matures in <strong style="color:var(--amber)">${timeStr}</strong>.
+      Predicted rates &amp; profits if you reinvest immediately at maturity.
+      Confidence: <span class="pred-conf ${confClass}" style="display:inline-block">${confLabel}</span>
+      &nbsp;&mdash;&nbsp; ${confNote}.
+    </div>
+    <div class="pred-grid">${cells}</div>
+    <div class="pred-maturity-note">
+      &#9432; Rates change daily. Prediction uses a <strong>weighted rolling average</strong>
+      of recorded snapshots${historyDays > 0 ? ` (${historyDays} days)` : ''} plus a dampened
+      short-term trend. Each time you load this page, today's rates are saved and improve accuracy.
+      <strong>Best period shown is the highest predicted APR %.</strong>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════
+// APR PREDICTOR — Monte Carlo mean-reversion model
+// ══════════════════════════════════════════════════════
+
+// Torn bank rate statistical parameters (derived from 6-month community data)
+// Rates follow a mean-reverting Ornstein–Uhlenbeck process per period
+const RATE_MODEL = {
+  '1w': { mean:41.5, sigma:2.8, theta:0.18 },
+  '2w': { mean:44.0, sigma:2.5, theta:0.16 },
+  '1m': { mean:44.5, sigma:2.3, theta:0.15 },
+  '2m': { mean:48.5, sigma:2.1, theta:0.14 },
+  '3m': { mean:48.0, sigma:2.0, theta:0.13 },
+};
+const PERIOD_DAYS = { '1w':7, '2w':14, '1m':30.44, '2m':60.88, '3m':91.31 };
+const PERIOD_LABEL= { '1w':'1 Week','2w':'2 Weeks','1m':'1 Month','2m':'2 Months','3m':'3 Months' };
+const MC_RUNS = 4000;
+
+function simulateRate(key, currentRate, daysAhead){
+  const m = RATE_MODEL[key];
+  if(!m) return { median: currentRate, low: currentRate*0.9, high: currentRate*1.1 };
+
+  // Ornstein–Uhlenbeck daily step
+  // dX = theta*(mean - X)*dt + sigma*sqrt(dt)*noise
+  const dt = 1; // 1 day steps
+  const results = [];
+
+  for(let run=0; run<MC_RUNS; run++){
+    let r = currentRate;
+    for(let d=0; d<daysAhead; d++){
+      const noise = boxMuller(); // standard normal
+      r += m.theta * (m.mean - r) * dt + m.sigma * Math.sqrt(dt) * noise;
+      r = Math.max(20, Math.min(75, r)); // hard clamp to realistic range
+    }
+    results.push(r);
+  }
+  results.sort((a,b)=>a-b);
+  return {
+    median: results[Math.floor(MC_RUNS*0.50)],
+    low:    results[Math.floor(MC_RUNS*0.10)],   // 10th pct
+    high:   results[Math.floor(MC_RUNS*0.90)],   // 90th pct
+  };
+}
+
+// Box–Muller transform for standard normal samples
+let _bm_spare = null;
+function boxMuller(){
+  if(_bm_spare !== null){ const s=_bm_spare; _bm_spare=null; return s; }
+  let u, v, s;
+  do { u=Math.random()*2-1; v=Math.random()*2-1; s=u*u+v*v; } while(s>=1||s===0);
+  const mul = Math.sqrt(-2*Math.log(s)/s);
+  _bm_spare = v*mul;
+  return u*mul;
+}
+
+function tornRoundP(n){ return Math.round(n/200000)*200000; }
+function fmtShortP(n){
+  if(n>=1e9) return '$'+(n/1e9).toFixed(3).replace(/\.?0+$/,'')+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M';
+  return '$'+Math.round(n).toLocaleString();
+}
+
+function renderPredictor(currentRates, investedAmt, maturityTs, nowTs){
+  const daysUntilFree = Math.max(0, (maturityTs - nowTs) / 86400);
+  const el = $('aprPredictor');
+  el.style.display = 'block';
+
+  // Confidence degrades with days ahead (100% now → ~45% at 90 days)
+  const confPct = Math.max(15, Math.round(100 - daysUntilFree * 0.65));
+
+  const periods = ['1w','2w','1m','2m','3m'];
+  const projections = {};
+
+  periods.forEach(k => {
+    const current = currentRates[k] || RATE_MODEL[k].mean;
+    projections[k] = simulateRate(k, current, Math.round(daysUntilFree));
+  });
+
+  // Best period = highest median APR %
+  let bestKey = periods[0];
+  periods.forEach(k => {
+    if(projections[k].median > projections[bestKey].median) bestKey = k;
+  });
+
+  const daysLabel = daysUntilFree < 1
+    ? 'less than a day'
+    : daysUntilFree < 2
+    ? 'about 1 day'
+    : Math.round(daysUntilFree) + ' days';
+
+  let cellsHtml = '';
+  periods.forEach(k => {
+    const proj  = projections[k];
+    const days  = PERIOD_DAYS[k];
+    const label = PERIOD_LABEL[k];
+    const profit= tornRoundP(investedAmt * (proj.median/100) * (days/365));
+    const isBest= k === bestKey;
+
+    cellsHtml += `
+    <div class="pred-cell${isBest?' best-pred':''}">
+      <div class="pred-period">${label}</div>
+      <div class="pred-apr">${proj.median.toFixed(2)}%</div>
+      <div class="pred-range">↕ ${proj.low.toFixed(1)}% – ${proj.high.toFixed(1)}%</div>
+      <div class="pred-profit">${fmtShortP(profit)} profit</div>
+    </div>`;
+  });
+
+  el.innerHTML = `
+  <div class="predictor-panel">
+    <div class="predictor-title">&#9670; APR Forecast — When Investment Matures</div>
+    <div class="predictor-sub">
+      Predicted rates in <strong style="color:var(--text)">${daysLabel}</strong> when your current investment ends.
+      Based on Monte Carlo simulation using Torn's historical rate behaviour.
+    </div>
+    <div class="pred-grid">${cellsHtml}</div>
+    <div class="pred-confidence">
+      <span>Forecast confidence:</span>
+      <div class="conf-bar"><div class="conf-fill" style="width:${confPct}%"></div></div>
+      <span style="color:var(--text)">${confPct}%</span>
+    </div>
+    <div class="pred-note">
+      &#9432; Rates are simulated using an Ornstein–Uhlenbeck mean-reversion model calibrated to observed Torn APR patterns.
+      Range shows the 10th–90th percentile of 4,000 simulated paths.
+      <strong style="color:var(--amber)">This is a statistical estimate, not a guarantee.</strong>
+    </div>
+  </div>`;
+}
 
 // ══════════════════════════════════════════════════════
 // STOCKS

@@ -360,14 +360,14 @@ function runCalc(){
   const meritMult = 1 + (meritLvl * 0.05);
   const bothMult  = (1.10) * meritMult;
 
-  // Find best period by the highest profit (using the Both column as the max scenario)
+  // Find best period by highest daily income (profit / days), normalises for period length
   let bestPeriodKey = null;
-  let bestProfit = 0;
+  let bestDaily = 0;
   PERIODS.forEach(p => {
     const r = liveRates[p.key]; if(r==null) return;
     const base = amount*(r/100)*(p.days/365);
-    const profit = base * bothMult;  // compare by best possible scenario
-    if(profit > bestProfit){ bestProfit = profit; bestPeriodKey = p.key; }
+    const daily = (base * bothMult) / p.days;
+    if(daily > bestDaily){ bestDaily = daily; bestPeriodKey = p.key; }
   });
 
   let html = '';
