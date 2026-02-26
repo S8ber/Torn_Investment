@@ -169,9 +169,7 @@
       <button onclick="setAmt(500e6)">500M</button>
       <button onclick="setAmt(1e9)">1B</button>
       <button onclick="setAmt(2e9)">2B</button>
-      <button onclick="setAmt(5e9)">5B</button>
-      <button onclick="setAmt(10e9)">10B</button>
-      <button onclick="setAmt(50e9)">50B</button>
+      <button onclick="setAmt(3e9)">3B</button>
     </div>
   </div>
 
@@ -330,8 +328,12 @@ function fmtShort(n){
 }
 function setAmt(n){ $('amountInput').value=Math.round(n).toLocaleString('en-US'); onAmount(); }
 function onAmount(){
-  const a=parseAmt($('amountInput').value);
-  $('parsedAmt').innerHTML = a>0 ? 'Calculating for: <span>'+fmtFull(a)+'</span>' : '';
+  let a=parseAmt($('amountInput').value);
+  if(a > 3e9){
+    a = 3e9;
+    $('amountInput').value = '3,000,000,000';
+  }
+  $('parsedAmt').innerHTML = a>0 ? 'Calculating for: <span>'+fmtFull(a)+'</span><span style="color:var(--muted);margin-left:8px;font-size:10px">(max $3B — Torn limit)</span>' : '';
   runCalc();
 }
 
@@ -358,12 +360,14 @@ function runCalc(){
   const meritMult = 1 + (meritLvl * 0.05);
   const bothMult  = (1.10) * meritMult;
 
-  // Find best period by regular profit
+  // Find best period by the highest profit (using the Both column as the max scenario)
+  let bestPeriodKey = null;
   let bestProfit = 0;
   PERIODS.forEach(p => {
     const r = liveRates[p.key]; if(r==null) return;
-    const profit = tornRound(amount*(r/100)*(p.days/365));
-    if(profit>bestProfit) bestProfit=profit;
+    const base = amount*(r/100)*(p.days/365);
+    const profit = base * bothMult;  // compare by best possible scenario
+    if(profit > bestProfit){ bestProfit = profit; bestPeriodKey = p.key; }
   });
 
   let html = '';
@@ -374,7 +378,7 @@ function runCalc(){
 const pTci  = base * tciMult;           // exact
 const pMer  = base * meritMult;         // exact
 const pBoth = base * bothMult;          // exact
-    const best  = Math.abs(pReg-bestProfit)<1;
+    const best  = p.key === bestPeriodKey;
 
     const cell = (profit, cls) =>
       `<td><div class="pval ${cls}">${fmtFull(profit)}</div>`+

@@ -69,6 +69,32 @@
   .rate-lbl{color:var(--muted);margin-right:4px}
   select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 8px;border-radius:3px;outline:none}
   @media(max-width:650px){.row{grid-template-columns:1fr 1fr}.row .field:first-child{grid-column:1/-1}}
+
+  /* ── Stocks section ── */
+  .stock-row{background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden}
+  .stock-header{display:grid;grid-template-columns:1.8fr 1fr 1fr 1fr 1fr;gap:12px;align-items:center;padding:14px 20px;cursor:pointer;transition:background 0.15s}
+  .stock-header:hover{background:rgba(255,255,255,0.02)}
+  .stock-row.active-stock{border-color:rgba(0,255,136,0.3)}
+  .stock-row.full-bonus{border-color:rgba(0,255,136,0.6);box-shadow:0 0 12px rgba(0,255,136,0.08)}
+  .stock-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text)}
+  .stock-acro{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:0.1em}
+  .bonus-progress-wrap{display:flex;flex-direction:column;gap:4px}
+  .bonus-progress-bar-bg{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden}
+  .bonus-progress-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--green-dim),var(--green));box-shadow:0 0 6px var(--green);transition:width 0.6s ease}
+  .bonus-progress-bar-fill.partial{background:linear-gradient(90deg,var(--amber),#ffcc00)}
+  .bonus-label{font-size:9px;color:var(--muted);letter-spacing:0.1em}
+  .bonus-pct{font-size:10px;color:var(--green)}
+  .bonus-pct.partial{color:var(--amber)}
+  .stock-cd{font-family:'Orbitron',monospace;font-size:11px;color:var(--amber)}
+  .stock-cd.ready{color:var(--green);animation:blink 1s infinite}
+  .stock-body{display:none;border-top:1px solid var(--border);padding:0}
+  .stock-row.open .stock-body{display:block}
+  .chevron{font-size:10px;color:var(--muted);transition:transform 0.2s;margin-left:4px}
+  .stock-row.open .chevron{transform:rotate(180deg)}
+  .chart-container{padding:16px 20px;position:relative}
+  .chart-canvas{width:100%;height:120px;display:block}
+  .chart-loading{text-align:center;padding:30px;color:var(--muted);font-size:11px}
+  .chart-error{text-align:center;padding:20px;color:var(--muted);font-size:10px}
 </style>
 </head>
 <body>
@@ -79,10 +105,13 @@
       <h1>TORN INVESTMENTS</h1>
       <div class="sub">City Bank &amp; Wealth Tracker</div>
     </div>
-    <div class="meta">
-      <span class="dot idle" id="dot"></span><span id="stxt">Idle</span><br>
-      Updated: <span id="updated">--</span><br>
-      Next: <span id="nxt">--</span>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+      <a href="calculator.html" style="background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;text-decoration:none;letter-spacing:0.1em;transition:background 0.2s" onmouseover="this.style.background='rgba(0,255,136,0.15)'" onmouseout="this.style.background='none'">&#9654; CALCULATOR</a>
+      <div class="meta">
+        <span class="dot idle" id="dot"></span><span id="stxt">Idle</span><br>
+        Updated: <span id="updated">--</span><br>
+        Next: <span id="nxt">--</span>
+      </div>
     </div>
   </header>
 
@@ -123,6 +152,15 @@
 
   <div class="inv-list" id="list">
     <div class="state">Enter your Torn API key above and click <strong>Load</strong>.</div>
+  </div>
+
+  <!-- Active Stocks Section -->
+  <div class="sec-head" style="margin-top:28px">
+    <h2>Active Stocks</h2>
+    <span class="badge" id="stockCount">0</span>
+  </div>
+  <div id="stockList">
+    <div class="state" style="padding:24px">No stock data loaded yet.</div>
   </div>
 
   <div class="strip">
@@ -326,6 +364,9 @@ async function loadData(){
     cdInt=setInterval(ticks,1000);
     ticks();
 
+    // Load stocks section
+    loadStocks(key);
+
   }catch(err){
     $('dot').className='dot err';$('stxt').textContent='Error';
     $('list').innerHTML=`<div class="state"><p>Failed to reach Torn API.</p><p class="errtxt">${err.message}</p></div>`;
@@ -336,6 +377,270 @@ window.addEventListener('DOMContentLoaded',()=>{
   const k=getKey();
   if(k){$('keyInput').value='(key saved — click Load to refresh)';loadData();}
 });
+
+// ══════════════════════════════════════════════════════
+// STOCKS
+// ══════════════════════════════════════════════════════
+let allStocksInfo = {};   // id -> {name, acronym, bonus:{requirement, frequency, description}}
+let userStocks    = [];   // raw user stock array
+let stockCdInt    = null;
+
+async function loadStocks(key){
+  try {
+    const enc = encodeURIComponent(key);
+    const [userR, allR] = await Promise.all([
+      fetch(`https://api.torn.com/v2/user/stocks?key=${enc}`),
+      fetch(`https://api.torn.com/v2/torn/stocks?key=${enc}`)
+    ]);
+    const userData = await userR.json();
+    const allData  = await allR.json();
+
+    if(userData.error || allData.error) return;
+
+    // Index all stocks by id
+    allStocksInfo = {};
+    (allData.stocks || []).forEach(s => { allStocksInfo[s.id] = s; });
+
+    // Filter to stocks user actually owns shares in
+    userStocks = (userData.stocks || []).filter(s => s.shares > 0);
+    $('stockCount').textContent = userStocks.length;
+
+    renderStocks();
+
+    if(stockCdInt) clearInterval(stockCdInt);
+    stockCdInt = setInterval(tickStocks, 1000);
+
+  } catch(e) {
+    $('stockList').innerHTML = `<div class="state" style="padding:24px">Failed to load stocks: ${e.message}</div>`;
+  }
+}
+
+function tickStocks(){
+  const now = Math.floor(Date.now()/1000);
+  userStocks.forEach(s => {
+    const el = $('scd-'+s.id);
+    if(!el) return;
+    const info = allStocksInfo[s.id];
+    if(!info || !info.bonus) return;
+    const freq = info.bonus.frequency; // seconds between payouts
+    const req  = info.bonus.requirement;
+    if(s.shares < req) return; // not active
+    const bonus = s.bonus || {};
+    const prog  = bonus.progress || 0;
+    const rem   = freq ? Math.max(0, freq - prog) : null;
+    if(rem === null){ el.textContent = '--'; return; }
+    el.textContent = rem <= 0 ? 'READY' : fmtT(rem);
+    el.className = 'stock-cd' + (rem<=0?' ready':'');
+    // tick the remaining time display
+    const remEl = $('srem-'+s.id);
+    if(remEl) remEl.textContent = rem<=0 ? 'READY' : fmtT(rem);
+  });
+}
+
+function renderStocks(){
+  if(!userStocks.length){
+    $('stockList').innerHTML='<div class="state" style="padding:24px">No stocks with shares found.</div>';
+    return;
+  }
+
+  const now = Math.floor(Date.now()/1000);
+  let html = '';
+
+  userStocks.forEach(s => {
+    const info  = allStocksInfo[s.id] || {};
+    const bonus = info.bonus || {};
+    const req   = bonus.requirement || 0;
+    const freq  = bonus.frequency   || 0;
+    const desc  = bonus.description || '';
+    const name  = info.name    || ('Stock #'+s.id);
+    const acro  = info.acronym || '';
+
+    const shares   = s.shares || 0;
+    const sbonus   = s.bonus  || {};
+    const progress = sbonus.progress  || 0; // seconds progressed in cycle
+    const isActive = req > 0 && shares >= req;
+    const isFull   = isActive; // full bonus = has required shares
+    const pct      = req > 0 ? Math.min(100, (shares / req) * 100) : 100;
+
+    // Time remaining for next payout
+    let cdText = '--';
+    let cdClass = 'stock-cd';
+    if(isActive && freq > 0){
+      const rem = Math.max(0, freq - progress);
+      cdText  = rem <= 0 ? 'READY' : fmtT(rem);
+      cdClass = 'stock-cd' + (rem<=0?' ready':'');
+    }
+
+    const fillClass = isFull ? '' : ' partial';
+    const rowClass  = isFull ? 'stock-row full-bonus' : (shares>0 ? 'stock-row active-stock' : 'stock-row');
+
+    html += `<div class="${rowClass}" id="srow-${s.id}">
+      <div class="stock-header" onclick="toggleStock(${s.id})">
+        <div class="field">
+          <span class="stock-name">${name} <span class="chevron">&#9660;</span></span>
+          <span class="stock-acro">${acro}${desc ? ' &nbsp;·&nbsp; '+desc : ''}</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Shares Held</span>
+          <span class="fval ${isActive?'pos':'amb'}">${shares.toLocaleString()}</span>
+        </div>
+        <div class="field bonus-progress-wrap">
+          <span class="bonus-label">Bonus Progress</span>
+          <div class="bonus-progress-bar-bg">
+            <div class="bonus-progress-bar-fill${fillClass}" style="width:${pct.toFixed(1)}%"></div>
+          </div>
+          <span class="bonus-pct${isFull?'':' partial'}">${shares.toLocaleString()} / ${req.toLocaleString()} shares (${pct.toFixed(0)}%)</span>
+        </div>
+        <div class="field">
+          <span class="flabel">Status</span>
+          <span class="fval ${isFull?'pos':shares>0?'amb':'neg'}">${isFull?'BONUS ACTIVE':shares>0?'ACCUMULATING':'NO SHARES'}</span>
+        </div>
+        <div class="field">
+          <span class="flabel">${isActive?'Next Payout':'Need'}</span>
+          ${isActive
+            ? `<span class="stock-cd" id="scd-${s.id}">${cdText}</span>`
+            : `<span class="fval amb">${req>0?(req-shares).toLocaleString()+' more':''}</span>`
+          }
+        </div>
+      </div>
+      <div class="stock-body" id="sbody-${s.id}">
+        <div class="chart-container">
+          <div class="chart-loading" id="schartload-${s.id}">&#9654; Click to load 24h price chart</div>
+          <canvas class="chart-canvas" id="schart-${s.id}" style="display:none" height="120"></canvas>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  $('stockList').innerHTML = html;
+}
+
+function toggleStock(id){
+  const row  = $('srow-'+id);
+  const body = $('sbody-'+id);
+  const wasOpen = row.classList.contains('open');
+  // close all
+  document.querySelectorAll('.stock-row.open').forEach(r=>{
+    r.classList.remove('open');
+  });
+  if(!wasOpen){
+    row.classList.add('open');
+    loadChart(id);
+  }
+}
+
+async function loadChart(id){
+  const loadEl  = $('schartload-'+id);
+  const canvas  = $('schart-'+id);
+  if(!canvas) return;
+  if(canvas.dataset.loaded === '1') return; // already loaded
+
+  loadEl.textContent = 'Loading chart...';
+
+  const key = getKey();
+  if(!key){ loadEl.textContent='No API key loaded.'; return; }
+
+  try {
+    // Get 24h of stock history — use torn stocks history endpoint
+    const res  = await fetch(`https://api.torn.com/v2/torn/stocks/${id}/history?limit=24&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+
+    const history = data.history || data.data || [];
+
+    if(!history.length){
+      loadEl.textContent = 'No chart data available for this stock.';
+      return;
+    }
+
+    const prices = history.map(h => h.price || h.close || 0).reverse();
+    const labels = history.map((h,i) => {
+      const d = new Date((h.timestamp||0)*1000);
+      return d.getHours()+'h';
+    }).reverse();
+
+    loadEl.style.display='none';
+    canvas.style.display='block';
+    canvas.dataset.loaded='1';
+
+    drawChart(canvas, prices, labels);
+  } catch(e){
+    loadEl.textContent = 'Chart unavailable: ' + e.message;
+  }
+}
+
+function drawChart(canvas, prices, labels){
+  const ctx    = canvas.getContext('2d');
+  const W      = canvas.offsetWidth || 600;
+  const H      = 120;
+  canvas.width  = W;
+  canvas.height = H;
+
+  const pad  = {top:10, right:10, bottom:24, left:52};
+  const cw   = W - pad.left - pad.right;
+  const ch   = H - pad.top  - pad.bottom;
+
+  const min  = Math.min(...prices) * 0.998;
+  const max  = Math.max(...prices) * 1.002;
+  const rng  = max - min || 1;
+
+  const xOf  = i => pad.left + (i / (prices.length-1)) * cw;
+  const yOf  = v => pad.top  + (1 - (v - min) / rng)  * ch;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.lineWidth = 1;
+  [0.25,0.5,0.75,1].forEach(f => {
+    const y = pad.top + f*ch;
+    ctx.beginPath(); ctx.moveTo(pad.left,y); ctx.lineTo(W-pad.right,y); ctx.stroke();
+  });
+
+  // Price line
+  const grad = ctx.createLinearGradient(0,pad.top,0,H-pad.bottom);
+  grad.addColorStop(0,'rgba(0,255,136,0.3)');
+  grad.addColorStop(1,'rgba(0,255,136,0)');
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), H-pad.bottom);
+  prices.forEach((p,i) => ctx.lineTo(xOf(i), yOf(p)));
+  ctx.lineTo(xOf(prices.length-1), H-pad.bottom);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = '#00ff88';
+  ctx.lineWidth = 1.5;
+  ctx.shadowColor = '#00ff88';
+  ctx.shadowBlur  = 6;
+  prices.forEach((p,i) => i===0 ? ctx.moveTo(xOf(i),yOf(p)) : ctx.lineTo(xOf(i),yOf(p)));
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Y axis labels
+  ctx.fillStyle = 'rgba(74,107,82,0.9)';
+  ctx.font = '9px Share Tech Mono, monospace';
+  ctx.textAlign = 'right';
+  [min, (min+max)/2, max].forEach(v => {
+    const y = yOf(v);
+    const label = v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v >= 1e3 ? '$'+(v/1e3).toFixed(0)+'K' : '$'+v.toFixed(2);
+    ctx.fillText(label, pad.left-4, y+3);
+  });
+
+  // X axis labels (show ~5 evenly spread)
+  ctx.textAlign = 'center';
+  const step = Math.floor(prices.length / 5) || 1;
+  labels.forEach((l,i) => {
+    if(i % step === 0 || i === labels.length-1){
+      ctx.fillText(l, xOf(i), H-pad.bottom+14);
+    }
+  });
+}
+
+
 </script>
 </body>
 </html>
