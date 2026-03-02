@@ -6,111 +6,226 @@
 <title>Torn · Travel Profits</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#080c10;--panel:#0b1219;--border:#1a2a1f;--green:#00ff88;--green-dim:#00cc6a;
-    --green-glow:rgba(0,255,136,0.15);--red:#ff3860;--amber:#ffb347;--blue:#4fc3f7;
-    --text:#c8e6d0;--muted:#4a6b52}
+  :root{
+    --bg:#06090d;
+    --panel:#0a0f16;
+    --panel2:#0d1520;
+    --border:#152030;
+    --border2:#1e3040;
+    --green:#00ff88;
+    --green-dim:#00cc6a;
+    --green-glow:rgba(0,255,136,0.12);
+    --red:#ff3860;
+    --amber:#ffb347;
+    --blue:#4fc3f7;
+    --purple:#c084fc;
+    --text:#c8e6d0;
+    --muted:#4a6b52;
+    --muted2:#2a4a32
+  }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;overflow-x:hidden}
+
+  /* scanline + grid overlay */
   body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
-    background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+    background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px)}
   body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px}
-  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
-  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
-  h1{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,28px);font-weight:900;
-    color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.5)}
-  .sub{font-size:10px;color:var(--muted);letter-spacing:0.3em;margin-top:5px}
-  .nav-btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
-    font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;
-    text-decoration:none;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap;align-self:center}
-  .nav-btn:hover{background:var(--green-glow)}
-  .key-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
-  .key-bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border);
+    background-image:linear-gradient(rgba(0,255,136,0.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.018) 1px,transparent 1px);background-size:48px 48px}
+
+  /* ambient glow blobs */
+  .ambient{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(120px);opacity:0.06}
+  .a1{width:600px;height:600px;background:var(--green);top:-150px;left:-150px}
+  .a2{width:400px;height:400px;background:#4fc3f7;bottom:-100px;right:-100px}
+
+  .wrap{max-width:1140px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
+
+  /* ── HEADER ── */
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+  .header-left{display:flex;align-items:center;gap:18px}
+  .header-icon{width:46px;height:46px;border:1px solid rgba(0,255,136,0.3);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    background:var(--panel);box-shadow:0 0 20px rgba(0,255,136,0.08)}
+  h1{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,26px);font-weight:900;
+    color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.4);letter-spacing:0.05em}
+  .sub{font-size:9px;color:var(--muted);letter-spacing:0.35em;margin-top:5px;text-transform:uppercase}
+  .nav-btn{background:none;border:1px solid rgba(0,255,136,0.3);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:11px;padding:9px 18px;border-radius:4px;
+    text-decoration:none;letter-spacing:0.1em;transition:all 0.2s;white-space:nowrap;align-self:center;cursor:pointer}
+  .nav-btn:hover{background:var(--green-glow);border-color:rgba(0,255,136,0.5)}
+
+  /* ── KEY BAR ── */
+  .key-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .key-bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border2);
     color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;
-    padding:10px 14px;border-radius:4px;outline:none;transition:border-color 0.2s}
-  .key-bar input:focus{border-color:rgba(0,255,136,0.4)}
+    padding:11px 16px;border-radius:4px;outline:none;transition:border-color 0.2s}
+  .key-bar input:focus{border-color:rgba(0,255,136,0.4);box-shadow:0 0 0 2px rgba(0,255,136,0.06)}
   .key-bar input::placeholder{color:var(--muted)}
   .btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
-    font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 18px;
-    border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
-  .btn:hover{background:var(--green-glow)}
-  .info-strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;
+    font-family:'Share Tech Mono',monospace;font-size:12px;padding:11px 20px;
+    border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:all 0.2s;white-space:nowrap}
+  .btn:hover{background:var(--green-glow);border-color:rgba(0,255,136,0.55)}
+  .btn:active{transform:scale(0.97)}
+
+  /* ── INFO STRIP ── */
+  .info-strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:11px 18px;
     background:var(--panel);border:1px solid var(--border);border-radius:4px;
-    margin-bottom:20px;font-size:11px;min-height:42px}
+    margin-bottom:16px;font-size:11px;min-height:44px}
   .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
-    box-shadow:0 0 8px var(--green);margin-right:6px;animation:blink 2s infinite}
+    box-shadow:0 0 8px var(--green);margin-right:8px;animation:blink 2s infinite;flex-shrink:0}
   .dot.idle{background:var(--muted);box-shadow:none;animation:none}
   .dot.err{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;
-    border-bottom:1px solid var(--border);margin-top:28px}
-  .sec-head h2{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
-  .badge{background:var(--green-glow);border:1px solid rgba(0,255,136,0.2);color:var(--green);font-size:10px;padding:2px 8px;border-radius:2px}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
 
-  /* Settings bar */
-  .settings-bar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:12px 16px;
-    background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:20px;font-size:11px}
-  .settings-bar label{color:var(--muted);margin-right:4px}
-  .settings-bar input, .settings-bar select{background:var(--bg);border:1px solid var(--border);
+  /* ── SETTINGS BAR ── */
+  .settings-bar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:14px 18px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:14px;font-size:11px}
+  .setting-group{display:flex;align-items:center;gap:8px}
+  .setting-group label{color:var(--muted);white-space:nowrap;font-size:10px;letter-spacing:0.05em;text-transform:uppercase}
+  .settings-bar input,.settings-bar select{background:var(--bg);border:1px solid var(--border2);
     color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;
-    padding:5px 8px;border-radius:3px;outline:none;width:90px}
-  .settings-bar input:focus, .settings-bar select:focus{border-color:rgba(0,255,136,0.4)}
+    padding:6px 10px;border-radius:3px;outline:none;transition:border-color 0.2s}
+  .settings-bar input{width:80px}
+  .settings-bar select{min-width:110px}
+  .settings-bar input:focus,.settings-bar select:focus{border-color:rgba(0,255,136,0.4)}
+  .settings-bar select option{background:#0a0f16}
+  .sep{width:1px;height:28px;background:var(--border2);flex-shrink:0}
 
-  /* Country cards */
-  .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-  .country-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;
-    overflow:hidden;transition:border-color 0.2s;position:relative}
-  .country-card:hover{border-color:rgba(0,255,136,0.2)}
-  .country-card.best{border-color:rgba(0,255,136,0.6);box-shadow:0 0 14px rgba(0,255,136,0.08)}
-  .country-card.best::before{content:'BEST $/HR';position:absolute;top:0;right:0;
-    font-size:8px;letter-spacing:0.15em;color:var(--green);background:rgba(0,255,136,0.1);
+  /* ── CATEGORY FILTERS ── */
+  .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 18px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:20px}
+  .filter-label{font-size:9px;letter-spacing:0.25em;color:var(--muted);text-transform:uppercase;margin-right:4px;white-space:nowrap}
+  .filter-chip{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border2);
+    color:var(--muted);font-family:'Share Tech Mono',monospace;font-size:10px;
+    padding:6px 12px;border-radius:20px;cursor:pointer;transition:all 0.2s;user-select:none;letter-spacing:0.05em;white-space:nowrap}
+  .filter-chip .chip-icon{font-size:13px;line-height:1}
+  .filter-chip:hover{border-color:rgba(0,255,136,0.3);color:var(--text)}
+  .filter-chip.active{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.5);color:var(--green);
+    box-shadow:0 0 10px rgba(0,255,136,0.06)}
+  .filter-chip.active .chip-icon{filter:drop-shadow(0 0 4px rgba(0,255,136,0.4))}
+
+  /* ── COUNTRY GRID ── */
+  .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+
+  /* ── COUNTRY CARD ── */
+  .country-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;
+    overflow:hidden;transition:all 0.2s;position:relative}
+  .country-card:hover{border-color:rgba(0,255,136,0.18);transform:translateY(-1px);box-shadow:0 6px 24px rgba(0,0,0,0.3)}
+  .country-card.best{border-color:rgba(0,255,136,0.55);box-shadow:0 0 20px rgba(0,255,136,0.07)}
+  .country-card.rank2{border-color:rgba(255,179,71,0.4)}
+  .country-card.rank3{border-color:rgba(79,195,247,0.35)}
+  .best-badge{position:absolute;top:0;right:0;font-size:8px;letter-spacing:0.15em;
+    color:var(--green);background:rgba(0,255,136,0.1);
     border-left:1px solid rgba(0,255,136,0.3);border-bottom:1px solid rgba(0,255,136,0.3);
-    padding:3px 8px;font-family:'Share Tech Mono',monospace}
-  .country-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
-  .country-flag{font-size:22px}
-  .country-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text)}
-  .country-travel{font-size:9px;color:var(--muted);margin-top:2px}
-  .country-body{padding:14px 18px}
-  .item-row{display:flex;justify-content:space-between;align-items:center;
-    padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+    padding:4px 10px;font-family:'Share Tech Mono',monospace;z-index:2}
+  .best-badge.b2{color:var(--amber);background:rgba(255,179,71,0.1);border-color:rgba(255,179,71,0.3)}
+  .best-badge.b3{color:var(--blue);background:rgba(79,195,247,0.1);border-color:rgba(79,195,247,0.3)}
+
+  /* Card header */
+  .country-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;
+    background:linear-gradient(135deg,var(--panel2) 0%,var(--panel) 100%)}
+  .country-flag-wrap{position:relative;flex-shrink:0}
+  .country-flag-emoji{font-size:32px;line-height:1;display:block;
+    filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5))}
+  .country-meta{flex:1;min-width:0}
+  .country-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:0.05em}
+  .country-travel{font-size:9px;color:var(--muted);margin-top:3px;display:flex;gap:10px}
+  .tag-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
+  .tag-pill{font-size:8px;padding:2px 7px;border-radius:10px;letter-spacing:0.05em;border:1px solid;line-height:1.5}
+  .tag-drugs{color:#ff7eb3;border-color:rgba(255,126,179,0.3);background:rgba(255,126,179,0.07)}
+  .tag-flowers{color:#86efac;border-color:rgba(134,239,172,0.3);background:rgba(134,239,172,0.07)}
+  .tag-plushies{color:#c084fc;border-color:rgba(192,132,252,0.3);background:rgba(192,132,252,0.07)}
+  .tag-electronics{color:#67e8f9;border-color:rgba(103,232,249,0.3);background:rgba(103,232,249,0.07)}
+  .tag-alcohol{color:#fbbf24;border-color:rgba(251,191,36,0.3);background:rgba(251,191,36,0.07)}
+  .tag-accessories{color:#a78bfa;border-color:rgba(167,139,250,0.3);background:rgba(167,139,250,0.07)}
+  .tag-other{color:var(--muted);border-color:rgba(74,107,82,0.3);background:rgba(74,107,82,0.07)}
+
+  /* Card body */
+  .country-body{padding:14px 16px}
+  .item-table-head{display:grid;grid-template-columns:1fr 72px 72px 68px 52px;gap:4px;
+    font-size:8px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;
+    margin-bottom:7px;padding-bottom:7px;border-bottom:1px solid var(--border)}
+  .item-table-head span:not(:first-child){text-align:right}
+  .item-row{display:grid;grid-template-columns:1fr 72px 72px 68px 52px;gap:4px;
+    align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.025);font-size:10px}
   .item-row:last-child{border-bottom:none}
-  .item-name{color:var(--muted);flex:1}
-  .item-buy{color:var(--text);min-width:80px;text-align:right}
-  .item-sell{color:var(--green);min-width:80px;text-align:right}
-  .item-profit{min-width:70px;text-align:right}
+  .item-name{color:var(--text);display:flex;align-items:center;gap:5px;min-width:0}
+  .item-name span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item-cat-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .item-buy{color:var(--muted);text-align:right;font-size:9px}
+  .item-sell{color:var(--text);text-align:right}
+  .item-profit{text-align:right}
   .item-profit.pos{color:var(--green)}
   .item-profit.neg{color:var(--red)}
-  .country-summary{margin-top:10px;padding:10px;background:var(--bg);border-radius:3px;
-    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:10px}
-  .summary-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:700}
-  .trip-note{font-size:9px;color:var(--muted);margin-top:4px}
+  .item-qty{color:var(--muted);text-align:right;font-size:9px}
 
-  /* State */
-  .state{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;line-height:2}
-  .spin{display:block;width:20px;height:20px;border:2px solid rgba(0,255,136,0.2);
-    border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+  /* Summary footer */
+  .country-summary{margin-top:12px;padding:12px;background:rgba(0,0,0,0.3);border-radius:4px;
+    display:grid;grid-template-columns:repeat(3,1fr);gap:8px;position:relative}
+  .country-summary::before{content:'';position:absolute;inset:0;border-radius:4px;
+    border:1px solid rgba(0,255,136,0.08);pointer-events:none}
+  .sum-block{text-align:center}
+  .sum-lbl{font-size:8px;color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:4px}
+  .sum-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;line-height:1}
+  .sum-sub{font-size:8px;color:var(--muted);margin-top:3px}
+  .cost-bar{margin-top:10px;padding:10px 12px;background:rgba(255,179,71,0.05);
+    border:1px solid rgba(255,179,71,0.15);border-radius:3px;font-size:9px;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+  .cost-lbl{color:var(--amber)}
+  .cost-val{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--amber)}
+
+  /* Empty state */
+  .empty-card{color:var(--muted);font-size:10px;padding:16px 0;text-align:center;letter-spacing:0.05em}
+
+  /* States */
+  .state{text-align:center;padding:56px 20px;color:var(--muted);font-size:13px;line-height:2.2}
+  .spin{display:block;width:22px;height:22px;border:2px solid rgba(0,255,136,0.15);
+    border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
   @keyframes spin{to{transform:rotate(360deg)}}
 
+  /* No results in filter */
+  .no-match{grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:12px}
+
+  /* Footer note */
+  .footer-note{margin-top:24px;padding:12px 18px;background:var(--panel);border:1px solid var(--border);
+    border-radius:4px;font-size:9px;color:var(--muted);line-height:1.8;letter-spacing:0.02em}
+
+  /* Watermark */
   .watermark{position:fixed;bottom:14px;right:18px;z-index:9998;font-family:'Share Tech Mono',monospace;
-    font-size:10px;color:rgba(0,255,136,0.18);letter-spacing:0.12em;pointer-events:none;
-    text-shadow:0 0 8px rgba(0,255,136,0.1);user-select:none}
+    font-size:10px;color:rgba(0,255,136,0.15);letter-spacing:0.12em;pointer-events:none;user-select:none}
+
+  /* Rank badge */
+  .rank-badge{position:absolute;top:0;left:0;width:22px;height:22px;display:flex;align-items:center;
+    justify-content:center;font-size:10px;font-family:'Orbitron',monospace;font-weight:900}
+
+  /* Responsive */
+  @media(max-width:600px){
+    .item-table-head,.item-row{grid-template-columns:1fr 60px 60px 58px}
+    .item-qty{display:none}
+    .settings-bar{gap:8px}
+    .sep{display:none}
+  }
 </style>
 </head>
 <body>
+<div class="ambient a1"></div>
+<div class="ambient a2"></div>
 <div class="wrap">
 
   <header>
-    <div>
-      <h1>TRAVEL PROFITS</h1>
-      <div class="sub">Live Item Prices &amp; Trip ROI Calculator</div>
+    <div class="header-left">
+      <div class="header-icon">✈️</div>
+      <div>
+        <h1>TRAVEL PROFITS</h1>
+        <div class="sub">Live Item Prices · Trip ROI Calculator</div>
+      </div>
     </div>
-    <a class="nav-btn" href="index.html">&larr; Banking/Stocks</a>
+    <a class="nav-btn" href="index.html">← Banking/Stocks</a>
   </header>
 
   <div class="key-bar">
     <input type="password" id="keyInput" placeholder="Torn API key..." autocomplete="off"/>
-    <button class="btn" onclick="fetchAll()">&#9654; FETCH PRICES</button>
+    <button class="btn" onclick="fetchAll()">▶ FETCH PRICES</button>
   </div>
 
   <div class="info-strip">
@@ -118,21 +233,64 @@
     <span id="infoLabel" style="color:var(--muted)">Enter your API key to load live item prices.</span>
   </div>
 
+  <!-- Settings -->
   <div class="settings-bar">
-    <div><label>Capacity (items)</label><input type="number" id="setCapacity" value="10" min="1" max="100" oninput="rerender()"/></div>
-    <div><label>Travel class</label>
+    <div class="setting-group">
+      <label>Items</label>
+      <input type="number" id="setCapacity" value="10" min="1" max="100" oninput="rerender()"/>
+    </div>
+    <div class="sep"></div>
+    <div class="setting-group">
+      <label>Class</label>
       <select id="setClass" onchange="rerender()">
         <option value="standard">Standard</option>
         <option value="business">Business</option>
         <option value="first">First Class</option>
       </select>
     </div>
-    <div><label>Sort by</label>
+    <div class="sep"></div>
+    <div class="setting-group">
+      <label>Sort by</label>
       <select id="setSort" onchange="rerender()">
         <option value="phr">Profit / hr</option>
         <option value="total">Total profit</option>
         <option value="margin">Margin %</option>
       </select>
+    </div>
+    <div class="sep"></div>
+    <div class="setting-group">
+      <label>Show</label>
+      <select id="setShow" onchange="rerender()">
+        <option value="all">All countries</option>
+        <option value="profit">Profitable only</option>
+        <option value="top5">Top 5</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Category filters -->
+  <div class="filter-bar">
+    <span class="filter-label">Filter:</span>
+    <div class="filter-chip active" data-cat="all" onclick="toggleFilter('all')">
+      <span class="chip-icon">⭐</span>Best Results
+    </div>
+    <div class="filter-chip" data-cat="drugs" onclick="toggleFilter('drugs')">
+      <span class="chip-icon">💊</span>Drugs
+    </div>
+    <div class="filter-chip" data-cat="flowers" onclick="toggleFilter('flowers')">
+      <span class="chip-icon">🌸</span>Flowers
+    </div>
+    <div class="filter-chip" data-cat="plushies" onclick="toggleFilter('plushies')">
+      <span class="chip-icon">🧸</span>Plushies
+    </div>
+    <div class="filter-chip" data-cat="alcohol" onclick="toggleFilter('alcohol')">
+      <span class="chip-icon">🍾</span>Alcohol
+    </div>
+    <div class="filter-chip" data-cat="electronics" onclick="toggleFilter('electronics')">
+      <span class="chip-icon">📷</span>Electronics
+    </div>
+    <div class="filter-chip" data-cat="accessories" onclick="toggleFilter('accessories')">
+      <span class="chip-icon">🎩</span>Accessories
     </div>
   </div>
 
@@ -140,10 +298,9 @@
     <div class="state">Fetch prices to see travel opportunities.</div>
   </div>
 
-  <div style="margin-top:28px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);
-    border-radius:4px;font-size:10px;color:var(--muted)">
+  <div class="footer-note">
     Buy prices = Torn foreign shop prices (fixed). Sell prices = current Torn market (live via API).
-    Profit calculated per trip including return travel time.
+    Profit calculated per round trip including return travel time. Cost = buy price × item count.
   </div>
 </div>
 
@@ -167,91 +324,110 @@ const TRAVEL_HOURS = {
   southafrica:{ standard:9.0,  business:7.7,  first:6.5  },
 };
 
-// ── Items available per country with their foreign buy prices ─────
-// Prices sourced from Torn wiki / community data (approximate fixed shop prices)
+// Category metadata
+const CAT_COLORS = {
+  drugs:       '#ff7eb3',
+  flowers:     '#86efac',
+  plushies:    '#c084fc',
+  electronics: '#67e8f9',
+  alcohol:     '#fbbf24',
+  accessories: '#a78bfa',
+  other:       '#4a6b52',
+};
+
+// ── Items available per country ───────────────────────────────────
 const COUNTRIES = [
   {
     key:'mexico', name:'Mexico', flag:'🇲🇽',
     items:[
-      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
-      { id:206, name:'Sombrero',             buyPrice:240,    qty:1  },
-      { id:367, name:'Tequila',              buyPrice:100,    qty:1  },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1, cat:'drugs'       },
+      { id:206, name:'Sombrero',            buyPrice:240,    qty:1, cat:'accessories' },
+      { id:367, name:'Tequila',             buyPrice:100,    qty:1, cat:'alcohol'     },
     ]
   },
   {
     key:'cayman', name:'Cayman Islands', flag:'🇰🇾',
     items:[
-      { id:367, name:'Tequila',              buyPrice:100,    qty:1  },
-      { id:370, name:'Rum',                  buyPrice:120,    qty:1  },
+      { id:367, name:'Tequila',             buyPrice:100,    qty:1, cat:'alcohol'  },
+      { id:370, name:'Rum',                 buyPrice:120,    qty:1, cat:'alcohol'  },
     ]
   },
   {
     key:'canada', name:'Canada', flag:'🇨🇦',
     items:[
-      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
-      { id:186, name:'Snowboard',            buyPrice:800,    qty:1  },
+      { id:619, name:'Cannabis',            buyPrice:50,     qty:1, cat:'drugs'       },
+      { id:186, name:'Snowboard',           buyPrice:800,    qty:1, cat:'accessories' },
     ]
   },
   {
     key:'hawaii', name:'Hawaii', flag:'🇺🇸',
     items:[
-      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
-      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1, cat:'drugs' },
+      { id:619, name:'Cannabis',            buyPrice:50,     qty:1, cat:'drugs' },
     ]
   },
   {
     key:'uk', name:'United Kingdom', flag:'🇬🇧',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:262, name:'Feather Boa',          buyPrice:450,    qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:262, name:'Feather Boa',         buyPrice:450,    qty:1, cat:'accessories' },
     ]
   },
   {
     key:'argentina', name:'Argentina', flag:'🇦🇷',
     items:[
-      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
-      { id:370, name:'Rum',                  buyPrice:120,    qty:1  },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1, cat:'drugs'   },
+      { id:370, name:'Rum',                 buyPrice:120,    qty:1, cat:'alcohol' },
     ]
   },
   {
     key:'switzerland', name:'Switzerland', flag:'🇨🇭',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:186, name:'Snowboard',            buyPrice:800,    qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:186, name:'Snowboard',           buyPrice:800,    qty:1, cat:'accessories' },
     ]
   },
   {
     key:'japan', name:'Japan', flag:'🇯🇵',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:262, name:'Feather Boa',          buyPrice:450,    qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:262, name:'Feather Boa',         buyPrice:450,    qty:1, cat:'accessories' },
     ]
   },
   {
     key:'china', name:'China', flag:'🇨🇳',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1, cat:'drugs'       },
     ]
   },
   {
     key:'uae', name:'UAE', flag:'🇦🇪',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1, cat:'drugs'       },
     ]
   },
   {
     key:'southafrica', name:'South Africa', flag:'🇿🇦',
     items:[
-      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
-      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
+      { id:203, name:'SLR Camera',          buyPrice:3250,   qty:1, cat:'electronics' },
+      { id:619, name:'Cannabis',            buyPrice:50,     qty:1, cat:'drugs'       },
     ]
   },
 ];
 
-let marketPrices = {}; // itemId -> lowestMarketPrice
-let allItemData  = {};
+let marketPrices = {};
+let activeFilter = 'all';
+
+// ── Filter logic ──────────────────────────────────────────────────
+function toggleFilter(cat){
+  activeFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(el => {
+    el.classList.toggle('active', el.dataset.cat === cat);
+  });
+  rerender();
+}
 
 function getKey(){ return sessionStorage.getItem('tornTravelKey')||''; }
 
@@ -268,13 +444,11 @@ async function fetchAll(){
 
   $('dot').className='dot';
   $('infoLabel').textContent='Fetching item prices from Torn market...';
-  $('countryGrid').innerHTML='<div class="state"><div class="spin"></div>Loading live prices...</div>';
+  $('countryGrid').innerHTML='<div class="state"><div class="spin"></div>Loading live prices…</div>';
 
-  // Collect all unique item IDs we need
   const itemIds = [...new Set(COUNTRIES.flatMap(c => c.items.map(i => i.id)))];
 
   try {
-    // Fetch market prices for each item
     const enc = encodeURIComponent(key);
     const results = await Promise.all(
       itemIds.map(id =>
@@ -285,39 +459,26 @@ async function fetchAll(){
       )
     );
 
-    console.log('market API results (first 20):', results.slice(0,20));
-
     const errors = [];
     results.forEach(({ id, data }) => {
-      if(!data){
-        errors.push({ id, type: 'network' });
-        return;
-      }
-      if(data.error){
-        errors.push({ id, type: 'api', error: data.error });
-        return;
-      }
-      // Torn returns an object with `itemmarket.listings` (not an array at top-level)
-      const listings = data.itemmarket && data.itemmarket.listings ? data.itemmarket.listings : null;
+      if(!data){ errors.push({ id, type:'network' }); return; }
+      if(data.error){ errors.push({ id, type:'api', error:data.error }); return; }
+      const listings = data.itemmarket?.listings;
       if(listings && listings.length > 0){
-        const lowest = Math.min(...listings.map(l => l.price));
-        marketPrices[id] = lowest;
+        marketPrices[id] = Math.min(...listings.map(l => l.price));
       }
     });
 
     const foundCount = Object.keys(marketPrices).length;
     if(foundCount === 0){
-      $('dot').className = 'dot err';
-      const networkErrors = errors.filter(e=>e.type==='network').length;
-      const apiErrors = errors.filter(e=>e.type==='api').length;
-      $('infoLabel').textContent = `No market prices — ${networkErrors} network / ${apiErrors} API errors. See console for details.`;
-      $('countryGrid').innerHTML = `<div class="state">No market prices were returned. Ensure your Torn API key is correct and that the API is reachable from this page.<br><br>If you opened this file directly (file://), CORS may block requests — serve the file over a local HTTP server. Open the browser console (F12) and inspect the "market API results" log for response details.</div>`;
-      console.log('detailed API/results errors:', errors.slice(0,50));
+      $('dot').className='dot err';
+      $('infoLabel').textContent=`No market prices — ${errors.filter(e=>e.type==='network').length} network / ${errors.filter(e=>e.type==='api').length} API errors.`;
+      $('countryGrid').innerHTML=`<div class="state">No market prices returned. Check API key or CORS (serve over HTTP, not file://).</div>`;
       return;
     }
 
     $('dot').className='dot';
-    $('infoLabel').textContent=`Prices loaded — ${foundCount}/${itemIds.length} items found on market`;
+    $('infoLabel').textContent=`✓ Prices loaded — ${foundCount}/${itemIds.length} items found on market`;
     rerender();
 
   } catch(e){
@@ -334,118 +495,166 @@ function fmt(n){
   return '$'+Math.round(n).toLocaleString();
 }
 
+function catTag(cat){
+  return `<span class="tag-pill tag-${cat}">${cat}</span>`;
+}
+
 function rerender(){
   if(!Object.keys(marketPrices).length) return;
 
   const capacity = parseInt($('setCapacity').value)||10;
   const tClass   = $('setClass').value;
   const sortBy   = $('setSort').value;
+  const showMode = $('setShow').value;
+  const filter   = activeFilter;
 
-  // Build profit data per country
   const countryResults = COUNTRIES.map(country => {
-    const travelHrs = (TRAVEL_HOURS[country.key]?.[tClass] || 5) * 2; // round trip
+    const travelHrs = (TRAVEL_HOURS[country.key]?.[tClass] || 5) * 2;
 
-    let totalProfit = 0;
-    let itemsHtml   = '';
-    let totalCost   = 0;
-    let filledSlots = 0;
+    // Filter items by category if needed
+    let candidateItems = country.items;
+    if(filter !== 'all'){
+      candidateItems = candidateItems.filter(i => i.cat === filter);
+    }
 
-    // For each item, figure out how many we can fit and what profit we make
-    const itemResults = country.items.map(item => {
+    const itemResults = candidateItems.map(item => {
       const sellPrice = marketPrices[item.id] || null;
       const profit    = sellPrice ? sellPrice - item.buyPrice : null;
       return { ...item, sellPrice, profit };
     }).filter(i => i.profit !== null && i.profit > 0)
       .sort((a,b) => b.profit - a.profit);
 
-    // Fill capacity with best items
-    let slotsLeft = capacity;
+    let totalProfit=0, totalCost=0, filledSlots=0, slotsLeft=capacity;
+    const usedItems = [];
+
     itemResults.forEach(item => {
       if(slotsLeft <= 0) return;
       const take   = Math.min(slotsLeft, item.qty || slotsLeft);
-      const profit = item.profit * take;
-      const cost   = item.buyPrice * take;
-      totalProfit += profit;
-      totalCost   += cost;
+      totalProfit += item.profit * take;
+      totalCost   += item.buyPrice * take;
       filledSlots += take;
       slotsLeft   -= take;
-
-      itemsHtml += `<div class="item-row">
-        <span class="item-name">${item.name}</span>
-        <span class="item-buy">${fmt(item.buyPrice)}</span>
-        <span class="item-sell">${fmt(item.sellPrice)}</span>
-        <span class="item-profit pos">+${fmt(item.profit)}</span>
-      </div>`;
+      usedItems.push({ ...item, take });
     });
 
+    // All categories present in this country (for tags)
+    const cats = [...new Set(country.items.map(i => i.cat))];
     const profitPerHr = travelHrs > 0 ? totalProfit / travelHrs : 0;
-    const margin      = totalCost > 0  ? (totalProfit / totalCost) * 100 : 0;
+    const margin      = totalCost > 0  ? (totalProfit / totalCost)*100 : 0;
 
-    return { country, totalProfit, profitPerHr, margin, travelHrs, itemsHtml, totalCost, filledSlots };
+    return { country, totalProfit, profitPerHr, margin, travelHrs, usedItems, totalCost, filledSlots, cats };
   });
 
+  // Filter by show mode
+  let displayResults = countryResults.filter(r => r.totalProfit > 0);
+
   // Sort
-  countryResults.sort((a,b) => {
-    if(sortBy === 'phr')    return b.profitPerHr  - a.profitPerHr;
-    if(sortBy === 'total')  return b.totalProfit  - a.totalProfit;
-    if(sortBy === 'margin') return b.margin       - a.margin;
+  displayResults.sort((a,b) => {
+    if(sortBy==='phr')    return b.profitPerHr - a.profitPerHr;
+    if(sortBy==='total')  return b.totalProfit - a.totalProfit;
+    if(sortBy==='margin') return b.margin      - a.margin;
     return 0;
   });
 
-  const bestPhr = Math.max(...countryResults.map(r => r.profitPerHr));
+  if(showMode==='top5') displayResults = displayResults.slice(0,5);
+
+  // Non-profitable countries (always at end, unless filter hides all)
+  const noProfit = countryResults.filter(r => r.totalProfit <= 0 && showMode !== 'profit');
+
+  if(displayResults.length===0 && noProfit.length===0){
+    $('countryGrid').innerHTML=`<div class="no-match">No countries match this filter with current market prices.</div>`;
+    return;
+  }
+
+  const bestPhr = displayResults.length ? displayResults[0].profitPerHr : 0;
 
   let html = '';
-  countryResults.forEach(r => {
-    if(r.totalProfit <= 0){
-      html += `<div class="country-card">
-        <div class="country-head">
-          <span class="country-flag">${r.country.flag}</span>
-          <div>
-            <div class="country-name">${r.country.name}</div>
-            <div class="country-travel">${r.travelHrs.toFixed(1)}h round trip</div>
-          </div>
-        </div>
-        <div class="country-body" style="color:var(--muted);font-size:11px;padding:14px 18px">
-          No profitable items found at current market prices.
-        </div>
-      </div>`;
-      return;
-    }
 
-    const isBest = Math.abs(r.profitPerHr - bestPhr) < 1;
+  displayResults.forEach((r, idx) => {
+    let rankClass='', badge='';
+    if(idx===0){ rankClass='best'; badge=`<div class="best-badge">★ BEST $/HR</div>`; }
+    else if(idx===1){ rankClass='rank2'; badge=`<div class="best-badge b2">2ND BEST</div>`; }
+    else if(idx===2){ rankClass='rank3'; badge=`<div class="best-badge b3">3RD BEST</div>`; }
 
-    html += `<div class="country-card ${isBest?'best':''}">
+    const tagPills = r.cats.map(c => catTag(c)).join('');
+
+    // Item rows
+    const itemRowsHtml = r.usedItems.map(item => `
+      <div class="item-row">
+        <div class="item-name">
+          <span class="item-cat-dot" style="background:${CAT_COLORS[item.cat]||CAT_COLORS.other}"></span>
+          <span title="${item.name}">${item.name}</span>
+        </div>
+        <div class="item-buy">${fmt(item.buyPrice)}</div>
+        <div class="item-sell">${fmt(item.sellPrice)}</div>
+        <div class="item-profit pos">+${fmt(item.profit)}</div>
+        <div class="item-qty">×${item.take}</div>
+      </div>`).join('');
+
+    html += `<div class="country-card ${rankClass}">
+      ${badge}
       <div class="country-head">
-        <span class="country-flag">${r.country.flag}</span>
-        <div>
+        <span class="country-flag-emoji">${r.country.flag}</span>
+        <div class="country-meta">
           <div class="country-name">${r.country.name}</div>
-          <div class="country-travel">&#9992; ${r.travelHrs.toFixed(1)}h round trip &nbsp;·&nbsp; ${r.filledSlots}/${capacity} slots</div>
+          <div class="country-travel">
+            <span>✈ ${r.travelHrs.toFixed(1)}h round trip</span>
+            <span>${r.filledSlots}/${capacity} slots used</span>
+          </div>
+          <div class="tag-pills">${tagPills}</div>
         </div>
       </div>
       <div class="country-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;font-size:9px;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">
-          <span>ITEM</span><span style="text-align:right">BUY</span><span style="text-align:right">SELL</span><span style="text-align:right">PROFIT</span>
+        <div class="item-table-head">
+          <span>Item</span><span style="text-align:right">Buy</span><span style="text-align:right">Sell</span><span style="text-align:right">Profit</span><span style="text-align:right">Qty</span>
         </div>
-        ${r.itemsHtml || '<div style="color:var(--muted);font-size:10px">No items</div>'}
+        ${itemRowsHtml || '<div class="empty-card">No items match this filter</div>'}
         <div class="country-summary">
-          <div>
-            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">TRIP PROFIT</div>
-            <div class="summary-val" style="color:var(--green)">${fmt(r.totalProfit)}</div>
+          <div class="sum-block">
+            <div class="sum-lbl">Trip Profit</div>
+            <div class="sum-val" style="color:var(--green)">${fmt(r.totalProfit)}</div>
+            <div class="sum-sub">total gain</div>
           </div>
-          <div>
-            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">PER HOUR</div>
-            <div class="summary-val" style="color:var(--amber)">${fmt(r.profitPerHr)}/hr</div>
+          <div class="sum-block">
+            <div class="sum-lbl">Per Hour</div>
+            <div class="sum-val" style="color:var(--amber)">${fmt(r.profitPerHr)}</div>
+            <div class="sum-sub">/hr</div>
           </div>
-          <div>
-            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">MARGIN</div>
-            <div class="summary-val" style="color:var(--blue)">${r.margin.toFixed(0)}%</div>
+          <div class="sum-block">
+            <div class="sum-lbl">Margin</div>
+            <div class="sum-val" style="color:var(--blue)">${r.margin.toFixed(0)}%</div>
+            <div class="sum-sub">ROI</div>
           </div>
+        </div>
+        <div class="cost-bar">
+          <span class="cost-lbl">💰 Cost for ${capacity} items</span>
+          <span class="cost-val">${fmt(r.totalCost)}</span>
         </div>
       </div>
     </div>`;
   });
 
-  $('countryGrid').innerHTML = html || '<div class="state">No profitable routes found.</div>';
+  // No-profit cards at the bottom (muted)
+  if(showMode !== 'profit'){
+    noProfit.forEach(r => {
+      const tagPills = r.cats.map(c => catTag(c)).join('');
+      html += `<div class="country-card" style="opacity:0.45">
+        <div class="country-head">
+          <span class="country-flag-emoji">${r.country.flag}</span>
+          <div class="country-meta">
+            <div class="country-name">${r.country.name}</div>
+            <div class="country-travel"><span>✈ ${r.travelHrs.toFixed(1)}h round trip</span></div>
+            <div class="tag-pills">${tagPills}</div>
+          </div>
+        </div>
+        <div class="country-body">
+          <div class="empty-card" style="padding:10px 0">No profitable items at current prices${r.country.items.some(i=>filter!=='all' && i.cat!==filter) ? ' for this filter':''}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  $('countryGrid').innerHTML = html || '<div class="no-match">No profitable routes found.</div>';
 }
 </script>
 </body>
