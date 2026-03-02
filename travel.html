@@ -297,8 +297,9 @@ async function fetchAll(){
         errors.push({ id, type: 'api', error: data.error });
         return;
       }
-      if(data.itemmarket && data.itemmarket.length > 0){
-        const listings = data.itemmarket;
+      // Torn returns an object with `itemmarket.listings` (not an array at top-level)
+      const listings = data.itemmarket && data.itemmarket.listings ? data.itemmarket.listings : null;
+      if(listings && listings.length > 0){
         const lowest = Math.min(...listings.map(l => l.price));
         marketPrices[id] = lowest;
       }
