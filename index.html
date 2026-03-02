@@ -69,6 +69,34 @@
   .rate-lbl{color:var(--muted);margin-right:4px}
   select{background:var(--panel);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 8px;border-radius:3px;outline:none}
   @media(max-width:650px){.row{grid-template-columns:1fr 1fr}.row .field:first-child{grid-column:1/-1}}
+  .nav-btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;
+    text-decoration:none;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
+  .nav-btn:hover{background:var(--green-glow)}
+
+  /* ── Burn Rate ── */
+  .burn-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:18px 22px;margin-bottom:20px}
+  .burn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:12px}
+  .burn-cell{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:12px 14px}
+  .burn-lbl{font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .burn-val{font-family:'Orbitron',monospace;font-size:15px;font-weight:700}
+  .burn-sub{font-size:9px;color:var(--muted);margin-top:3px}
+
+  /* ── Reinvestment Optimizer ── */
+  .reinvest-panel{background:var(--panel);border:1px solid rgba(255,179,71,0.2);border-radius:4px;padding:18px 22px;margin-bottom:20px;position:relative;overflow:hidden}
+  .reinvest-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);opacity:0.5}
+  .reinvest-title{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--amber);margin-bottom:12px}
+  .reinvest-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+  .reinvest-input{background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:12px;padding:7px 10px;border-radius:4px;outline:none;width:130px}
+  .reinvest-input:focus{border-color:rgba(255,179,71,0.4)}
+  .reinvest-lbl{font-size:10px;color:var(--muted);min-width:80px}
+  .reinvest-result{margin-top:12px;display:none}
+  .reinvest-cycle{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 14px;margin-bottom:6px;display:grid;grid-template-columns:40px 1fr 1fr 1fr;gap:8px;align-items:center;font-size:11px}
+  .cycle-num{font-family:'Orbitron',monospace;font-size:10px;color:var(--muted)}
+  .cycle-period{color:var(--text)}
+  .cycle-profit{color:var(--green)}
+  .cycle-total{color:var(--amber);font-family:'Orbitron',monospace;font-size:10px}
+  .reinvest-summary{margin-top:10px;padding:10px 14px;background:rgba(255,179,71,0.06);border:1px solid rgba(255,179,71,0.2);border-radius:4px;font-size:11px}
 
   /* ── APR Predictor ── */
   .predictor-panel{background:var(--panel);border:1px solid rgba(79,195,247,0.25);border-radius:4px;padding:20px 24px;margin-bottom:24px;position:relative;overflow:hidden}
@@ -149,6 +177,11 @@
   .pred-maturity-note strong{color:var(--amber)}
   @media(max-width:700px){.pred-grid{grid-template-columns:repeat(3,1fr)}}
   @media(max-width:400px){.pred-grid{grid-template-columns:repeat(2,1fr)}}
+
+  .watermark{position:fixed;bottom:14px;right:18px;z-index:9998;
+    font-family:'Share Tech Mono',monospace;font-size:10px;
+    color:rgba(0,255,136,0.18);letter-spacing:0.12em;pointer-events:none;
+    text-shadow:0 0 8px rgba(0,255,136,0.1);user-select:none}
 </style>
 </head>
 <body>
@@ -160,7 +193,11 @@
       <div class="sub">City Bank &amp; Wealth Tracker</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">
-      <a href="calculator.html" style="background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;text-decoration:none;letter-spacing:0.1em;transition:background 0.2s" onmouseover="this.style.background='rgba(0,255,136,0.15)'" onmouseout="this.style.background='none'">&#9654; CALCULATOR</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <a href="calculator.html" class="nav-btn">&#9654; CALCULATOR</a>
+        <a href="oc-timer.html"   class="nav-btn">&#9654; OC TIMER</a>
+        <a href="travel.html"     class="nav-btn">&#9654; TRAVEL</a>
+      </div>
       <div class="meta">
         <span class="dot idle" id="dot"></span><span id="stxt">Idle</span><br>
         Updated: <span id="updated">--</span><br>
@@ -221,6 +258,36 @@
   </div>
   <div id="stockList">
     <div class="state" style="padding:24px">No stock data loaded yet.</div>
+  </div>
+
+  <!-- ── BURN RATE ── -->
+  <div id="burnSection" style="display:none;margin-top:28px">
+    <div class="sec-head">
+      <h2>Net Worth Velocity</h2>
+      <span class="badge" id="burnBadge">--</span>
+    </div>
+    <div class="burn-panel">
+      <div style="font-size:10px;color:var(--muted)">Tracks how your wealth changes each session. Load a few times over days to build history.</div>
+      <div class="burn-grid" id="burnGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── REINVESTMENT OPTIMIZER ── -->
+  <div id="reinvestSection" style="display:none;margin-top:28px">
+    <div class="sec-head">
+      <h2>Reinvestment Optimizer</h2>
+    </div>
+    <div class="reinvest-panel">
+      <div class="reinvest-title">&#9670; Chain Calculator</div>
+      <div class="reinvest-row">
+        <span class="reinvest-lbl">Liquid cash</span>
+        <input class="reinvest-input" id="riCash" placeholder="e.g. 3b" oninput="runReinvest()"/>
+        <span class="reinvest-lbl" style="margin-left:10px">Cycles</span>
+        <input class="reinvest-input" id="riCycles" type="number" min="1" max="12" value="4" style="width:70px" oninput="runReinvest()"/>
+      </div>
+      <div style="font-size:9px;color:var(--muted)">Uses current live rates. Shows optimal period per cycle to maximise total return.</div>
+      <div class="reinvest-result" id="reinvestResult"></div>
+    </div>
   </div>
 
   <div class="strip">
@@ -354,8 +421,16 @@ async function loadData(){
       $('cMature').textContent='No investment';$('cMature').className='cval neu';
     }
 
+    // Record networth snapshot for burn rate tracker
+    {
+      const cityTotal = (cb.amount||0) + (cb.profit||0);
+      recordNetworth(money.wallet, money.cayman_bank, money.vault, cityTotal);
+    }
+
     // Bank rates bar
     const rates=bankData.bank||{};
+    _liveRatesForReinvest = rates;
+    if(Object.keys(rates).length) $('reinvestSection').style.display='block';
     const ratesBar=$('ratesBar');
     if(Object.keys(rates).length){
       ratesBar.style.display='flex';
@@ -452,6 +527,186 @@ window.addEventListener('DOMContentLoaded',()=>{
   const k=getKey();
   if(k){$('keyInput').value='(key saved — click Load to refresh)';loadData();}
 });
+
+// ══════════════════════════════════════════════════════
+// NET WORTH VELOCITY (Burn Rate Tracker)
+// ══════════════════════════════════════════════════════
+const NETWORTH_KEY = 'tornNetworthHistory';
+
+function recordNetworth(wallet, caymanBank, vault, cityBankTotal){
+  const total = (wallet||0) + (caymanBank||0) + (vault||0) + (cityBankTotal||0);
+  if(total <= 0) return;
+  const now = Math.floor(Date.now()/1000);
+  let hist = [];
+  try { hist = JSON.parse(localStorage.getItem(NETWORTH_KEY)||'[]'); } catch(e){}
+  // One entry per session (don't stack within 5 minutes)
+  if(hist.length && (now - hist[hist.length-1].ts) < 300){
+    hist[hist.length-1] = { ts: now, val: total };
+  } else {
+    hist.push({ ts: now, val: total });
+    if(hist.length > 60) hist = hist.slice(-60);
+  }
+  try { localStorage.setItem(NETWORTH_KEY, JSON.stringify(hist)); } catch(e){}
+  renderBurnRate(hist);
+}
+
+function fmtVel(n){
+  const abs = Math.abs(n);
+  const sign = n >= 0 ? '+' : '-';
+  if(abs >= 1e9) return sign+'$'+(abs/1e9).toFixed(2)+'B';
+  if(abs >= 1e6) return sign+'$'+(abs/1e6).toFixed(1)+'M';
+  if(abs >= 1e3) return sign+'$'+(abs/1e3).toFixed(0)+'K';
+  return sign+'$'+Math.round(abs).toLocaleString();
+}
+
+function renderBurnRate(hist){
+  if(!hist || hist.length < 2){ return; }
+  $('burnSection').style.display = 'block';
+
+  const latest  = hist[hist.length-1];
+  const prev    = hist[hist.length-2];
+  const secsDiff = Math.max(1, latest.ts - prev.ts);
+  const valDiff  = latest.val - prev.val;
+
+  const perDay  = valDiff / (secsDiff / 86400);
+  const perWeek = perDay * 7;
+  const per30   = perDay * 30;
+
+  // Session-to-session
+  const sessionDiff = valDiff;
+
+  // 7-day trend if we have enough
+  let trend7 = null;
+  const week = hist.filter(h => h.ts >= latest.ts - 86400*7);
+  if(week.length >= 2){
+    trend7 = (week[week.length-1].val - week[0].val) / ((week[week.length-1].ts - week[0].ts) / 86400);
+  }
+
+  const isPos = perDay >= 0;
+  $('burnBadge').textContent = isPos ? 'GROWING' : 'DECLINING';
+  $('burnBadge').style.color = isPos ? 'var(--green)' : 'var(--red)';
+
+  $('burnGrid').innerHTML = `
+    <div class="burn-cell">
+      <div class="burn-lbl">Session Change</div>
+      <div class="burn-val" style="color:${sessionDiff>=0?'var(--green)':'var(--red)'}">${fmtVel(sessionDiff)}</div>
+      <div class="burn-sub">${Math.round(secsDiff/60)}min ago</div>
+    </div>
+    <div class="burn-cell">
+      <div class="burn-lbl">Daily Rate</div>
+      <div class="burn-val" style="color:${perDay>=0?'var(--green)':'var(--red)'}">${fmtVel(perDay)}/day</div>
+      <div class="burn-sub">Based on last 2 snapshots</div>
+    </div>
+    <div class="burn-cell">
+      <div class="burn-lbl">Weekly Projection</div>
+      <div class="burn-val" style="color:${perWeek>=0?'var(--green)':'var(--red)'}">${fmtVel(perWeek)}</div>
+      <div class="burn-sub">If trend holds</div>
+    </div>
+    <div class="burn-cell">
+      <div class="burn-lbl">30-Day Projection</div>
+      <div class="burn-val" style="color:${per30>=0?'var(--green)':'var(--red)'}">${fmtVel(per30)}</div>
+      <div class="burn-sub">If trend holds</div>
+    </div>
+    ${trend7 !== null ? `<div class="burn-cell">
+      <div class="burn-lbl">7-Day Trend</div>
+      <div class="burn-val" style="color:${trend7>=0?'var(--green)':'var(--red)'}">${fmtVel(trend7)}/day</div>
+      <div class="burn-sub">${week.length} snapshots</div>
+    </div>` : ''}
+    <div class="burn-cell">
+      <div class="burn-lbl">Snapshots</div>
+      <div class="burn-val" style="color:var(--text)">${hist.length}</div>
+      <div class="burn-sub">Load daily for better data</div>
+    </div>`;
+}
+
+// Hook into loadData — call after money data loads
+// findable anchor: "const money=moneyData.money||{};"
+// We patch via the existing flow by calling recordNetworth after data is parsed
+
+// ══════════════════════════════════════════════════════
+// REINVESTMENT OPTIMIZER
+// ══════════════════════════════════════════════════════
+let _liveRatesForReinvest = {};
+
+function parseReinvestAmt(s){
+  s = (s||'').replace(/,/g,'').trim().toLowerCase();
+  if(/^[\d.]+b/.test(s)) return parseFloat(s)*1e9;
+  if(/^[\d.]+m/.test(s)) return parseFloat(s)*1e6;
+  if(/^[\d.]+k/.test(s)) return parseFloat(s)*1e3;
+  return parseFloat(s)||0;
+}
+
+function fmtRi(n){
+  if(n>=1e9) return '$'+(n/1e9).toFixed(3).replace(/\.?0+$/,'')+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2).replace(/\.?0+$/,'')+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+
+function tornRoundRi(n){ return Math.round(n/200000)*200000; }
+
+function runReinvest(){
+  const rates = _liveRatesForReinvest;
+  if(!Object.keys(rates).length) return;
+
+  const cash   = parseReinvestAmt($('riCash').value);
+  const cycles = Math.min(12, Math.max(1, parseInt($('riCycles').value)||4));
+  if(!cash || cash <= 0) { $('reinvestResult').style.display='none'; return; }
+
+  const PERIODS = [
+    {key:'1w', label:'1 Week',    days:7},
+    {key:'2w', label:'2 Weeks',   days:14},
+    {key:'1m', label:'1 Month',   days:30.44},
+    {key:'2m', label:'2 Months',  days:60.88},
+    {key:'3m', label:'3 Months',  days:91.31},
+  ];
+
+  // For each cycle, pick the period with best daily return
+  let running = cash;
+  let totalDays = 0;
+  let html = '';
+
+  for(let i = 1; i <= cycles; i++){
+    // Cap at 3B (Torn limit)
+    const invested = Math.min(running, 3e9);
+
+    // Find best period by daily return
+    let best = null, bestDaily = 0;
+    PERIODS.forEach(p => {
+      const r = rates[p.key]; if(r == null) return;
+      const profit = tornRoundRi(invested * (r/100) * (p.days/365));
+      const daily  = profit / p.days;
+      if(daily > bestDaily){ bestDaily = daily; best = { ...p, profit, daily, rate: r }; }
+    });
+    if(!best) break;
+
+    running   += best.profit;
+    totalDays += best.days;
+
+    html += `<div class="reinvest-cycle">
+      <div class="cycle-num">#${i}</div>
+      <div class="cycle-period">${best.label} @ ${best.rate.toFixed(2)}%</div>
+      <div class="cycle-profit">+${fmtRi(best.profit)} profit</div>
+      <div class="cycle-total">${fmtRi(running)} total</div>
+    </div>`;
+  }
+
+  const totalProfit = running - cash;
+  const totalReturn = cash > 0 ? ((totalProfit/cash)*100).toFixed(2) : '0';
+  const avgDays = Math.round(totalDays / cycles);
+
+  html += `<div class="reinvest-summary">
+    Starting capital: <strong style="color:var(--text)">${fmtRi(cash)}</strong> &nbsp;·&nbsp;
+    After ${cycles} cycles: <strong style="color:var(--green)">${fmtRi(running)}</strong> &nbsp;·&nbsp;
+    Total profit: <strong style="color:var(--green)">+${fmtRi(totalProfit)}</strong> &nbsp;·&nbsp;
+    Return: <strong style="color:var(--amber)">${totalReturn}%</strong> &nbsp;·&nbsp;
+    ~${Math.round(totalDays/30)} months
+  </div>`;
+
+  const el = $('reinvestResult');
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
 
 // ══════════════════════════════════════════════════════
 // APR PREDICTOR
@@ -1018,5 +1273,6 @@ function drawChart(canvas, prices, labels){
 
 
 </script>
+<div class="watermark">S8ber [3901859]</div>
 </body>
 </html>

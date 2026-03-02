@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torn · Travel Profits</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080c10;--panel:#0b1219;--border:#1a2a1f;--green:#00ff88;--green-dim:#00cc6a;
+    --green-glow:rgba(0,255,136,0.15);--red:#ff3860;--amber:#ffb347;--blue:#4fc3f7;
+    --text:#c8e6d0;--muted:#4a6b52}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+  h1{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,28px);font-weight:900;
+    color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.5)}
+  .sub{font-size:10px;color:var(--muted);letter-spacing:0.3em;margin-top:5px}
+  .nav-btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;
+    text-decoration:none;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap;align-self:center}
+  .nav-btn:hover{background:var(--green-glow)}
+  .key-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .key-bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;
+    padding:10px 14px;border-radius:4px;outline:none;transition:border-color 0.2s}
+  .key-bar input:focus{border-color:rgba(0,255,136,0.4)}
+  .key-bar input::placeholder{color:var(--muted)}
+  .btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 18px;
+    border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
+  .btn:hover{background:var(--green-glow)}
+  .info-strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    margin-bottom:20px;font-size:11px;min-height:42px}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);margin-right:6px;animation:blink 2s infinite}
+  .dot.idle{background:var(--muted);box-shadow:none;animation:none}
+  .dot.err{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;
+    border-bottom:1px solid var(--border);margin-top:28px}
+  .sec-head h2{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+  .badge{background:var(--green-glow);border:1px solid rgba(0,255,136,0.2);color:var(--green);font-size:10px;padding:2px 8px;border-radius:2px}
+
+  /* Settings bar */
+  .settings-bar{display:flex;gap:16px;flex-wrap:wrap;align-items:center;padding:12px 16px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;margin-bottom:20px;font-size:11px}
+  .settings-bar label{color:var(--muted);margin-right:4px}
+  .settings-bar input, .settings-bar select{background:var(--bg);border:1px solid var(--border);
+    color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;
+    padding:5px 8px;border-radius:3px;outline:none;width:90px}
+  .settings-bar input:focus, .settings-bar select:focus{border-color:rgba(0,255,136,0.4)}
+
+  /* Country cards */
+  .country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+  .country-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    overflow:hidden;transition:border-color 0.2s;position:relative}
+  .country-card:hover{border-color:rgba(0,255,136,0.2)}
+  .country-card.best{border-color:rgba(0,255,136,0.6);box-shadow:0 0 14px rgba(0,255,136,0.08)}
+  .country-card.best::before{content:'BEST $/HR';position:absolute;top:0;right:0;
+    font-size:8px;letter-spacing:0.15em;color:var(--green);background:rgba(0,255,136,0.1);
+    border-left:1px solid rgba(0,255,136,0.3);border-bottom:1px solid rgba(0,255,136,0.3);
+    padding:3px 8px;font-family:'Share Tech Mono',monospace}
+  .country-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+  .country-flag{font-size:22px}
+  .country-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;color:var(--text)}
+  .country-travel{font-size:9px;color:var(--muted);margin-top:2px}
+  .country-body{padding:14px 18px}
+  .item-row{display:flex;justify-content:space-between;align-items:center;
+    padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:11px}
+  .item-row:last-child{border-bottom:none}
+  .item-name{color:var(--muted);flex:1}
+  .item-buy{color:var(--text);min-width:80px;text-align:right}
+  .item-sell{color:var(--green);min-width:80px;text-align:right}
+  .item-profit{min-width:70px;text-align:right}
+  .item-profit.pos{color:var(--green)}
+  .item-profit.neg{color:var(--red)}
+  .country-summary{margin-top:10px;padding:10px;background:var(--bg);border-radius:3px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:10px}
+  .summary-val{font-family:'Orbitron',monospace;font-size:13px;font-weight:700}
+  .trip-note{font-size:9px;color:var(--muted);margin-top:4px}
+
+  /* State */
+  .state{text-align:center;padding:48px 20px;color:var(--muted);font-size:13px;line-height:2}
+  .spin{display:block;width:20px;height:20px;border:2px solid rgba(0,255,136,0.2);
+    border-top-color:var(--green);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .watermark{position:fixed;bottom:14px;right:18px;z-index:9998;font-family:'Share Tech Mono',monospace;
+    font-size:10px;color:rgba(0,255,136,0.18);letter-spacing:0.12em;pointer-events:none;
+    text-shadow:0 0 8px rgba(0,255,136,0.1);user-select:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>TRAVEL PROFITS</h1>
+      <div class="sub">Live Item Prices &amp; Trip ROI Calculator</div>
+    </div>
+    <a class="nav-btn" href="index.html">&larr; Banking/Stocks</a>
+  </header>
+
+  <div class="key-bar">
+    <input type="password" id="keyInput" placeholder="Torn API key..." autocomplete="off"/>
+    <button class="btn" onclick="fetchAll()">&#9654; FETCH PRICES</button>
+  </div>
+
+  <div class="info-strip">
+    <span class="dot idle" id="dot"></span>
+    <span id="infoLabel" style="color:var(--muted)">Enter your API key to load live item prices.</span>
+  </div>
+
+  <div class="settings-bar">
+    <div><label>Capacity (items)</label><input type="number" id="setCapacity" value="10" min="1" max="100" oninput="rerender()"/></div>
+    <div><label>Travel class</label>
+      <select id="setClass" onchange="rerender()">
+        <option value="standard">Standard</option>
+        <option value="business">Business</option>
+        <option value="first">First Class</option>
+      </select>
+    </div>
+    <div><label>Sort by</label>
+      <select id="setSort" onchange="rerender()">
+        <option value="phr">Profit / hr</option>
+        <option value="total">Total profit</option>
+        <option value="margin">Margin %</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="countryGrid" class="country-grid">
+    <div class="state">Fetch prices to see travel opportunities.</div>
+  </div>
+
+  <div style="margin-top:28px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);
+    border-radius:4px;font-size:10px;color:var(--muted)">
+    Buy prices = Torn foreign shop prices (fixed). Sell prices = current Torn market (live via API).
+    Profit calculated per trip including return travel time.
+  </div>
+</div>
+
+<div class="watermark">S8ber [3901859]</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+// ── Travel times in hours (one-way) by class ─────────────────────
+const TRAVEL_HOURS = {
+  mexico:     { standard:1.5,  business:1.3,  first:1.1  },
+  cayman:     { standard:2.0,  business:1.7,  first:1.4  },
+  canada:     { standard:2.0,  business:1.7,  first:1.4  },
+  hawaii:     { standard:4.5,  business:3.8,  first:3.2  },
+  uk:         { standard:7.0,  business:5.9,  first:5.0  },
+  argentina:  { standard:7.0,  business:5.9,  first:5.0  },
+  switzerland:{ standard:8.0,  business:6.8,  first:5.7  },
+  japan:      { standard:9.5,  business:8.1,  first:6.8  },
+  china:      { standard:9.5,  business:8.1,  first:6.8  },
+  uae:        { standard:9.0,  business:7.7,  first:6.5  },
+  southafrica:{ standard:9.0,  business:7.7,  first:6.5  },
+};
+
+// ── Items available per country with their foreign buy prices ─────
+// Prices sourced from Torn wiki / community data (approximate fixed shop prices)
+const COUNTRIES = [
+  {
+    key:'mexico', name:'Mexico', flag:'🇲🇽',
+    items:[
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+      { id:206, name:'Sombrero',             buyPrice:240,    qty:1  },
+      { id:367, name:'Tequila',              buyPrice:100,    qty:1  },
+    ]
+  },
+  {
+    key:'cayman', name:'Cayman Islands', flag:'🇰🇾',
+    items:[
+      { id:367, name:'Tequila',              buyPrice:100,    qty:1  },
+      { id:370, name:'Rum',                  buyPrice:120,    qty:1  },
+    ]
+  },
+  {
+    key:'canada', name:'Canada', flag:'🇨🇦',
+    items:[
+      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
+      { id:186, name:'Snowboard',            buyPrice:800,    qty:1  },
+    ]
+  },
+  {
+    key:'hawaii', name:'Hawaii', flag:'🇺🇸',
+    items:[
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
+    ]
+  },
+  {
+    key:'uk', name:'United Kingdom', flag:'🇬🇧',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:262, name:'Feather Boa',          buyPrice:450,    qty:1  },
+    ]
+  },
+  {
+    key:'argentina', name:'Argentina', flag:'🇦🇷',
+    items:[
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+      { id:370, name:'Rum',                  buyPrice:120,    qty:1  },
+    ]
+  },
+  {
+    key:'switzerland', name:'Switzerland', flag:'🇨🇭',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:186, name:'Snowboard',            buyPrice:800,    qty:1  },
+    ]
+  },
+  {
+    key:'japan', name:'Japan', flag:'🇯🇵',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:262, name:'Feather Boa',          buyPrice:450,    qty:1  },
+    ]
+  },
+  {
+    key:'china', name:'China', flag:'🇨🇳',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+    ]
+  },
+  {
+    key:'uae', name:'UAE', flag:'🇦🇪',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:180, name:'Xanax',               buyPrice:250,    qty:1  },
+    ]
+  },
+  {
+    key:'southafrica', name:'South Africa', flag:'🇿🇦',
+    items:[
+      { id:203, name:'SLR Camera',           buyPrice:3250,   qty:1  },
+      { id:619, name:'Cannabis',             buyPrice:50,     qty:1  },
+    ]
+  },
+];
+
+let marketPrices = {}; // itemId -> lowestMarketPrice
+let allItemData  = {};
+
+function getKey(){ return sessionStorage.getItem('tornTravelKey')||''; }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const k = getKey();
+  if(k){ $('keyInput').value='(saved)'; fetchAll(); }
+});
+
+async function fetchAll(){
+  const raw = $('keyInput').value.trim();
+  const key = (raw && raw!=='(saved)') ? raw : getKey();
+  if(!key){ alert('Enter your API key.'); return; }
+  sessionStorage.setItem('tornTravelKey', key);
+
+  $('dot').className='dot';
+  $('infoLabel').textContent='Fetching item prices from Torn market...';
+  $('countryGrid').innerHTML='<div class="state"><div class="spin"></div>Loading live prices...</div>';
+
+  // Collect all unique item IDs we need
+  const itemIds = [...new Set(COUNTRIES.flatMap(c => c.items.map(i => i.id)))];
+
+  try {
+    // Fetch market prices for each item
+    const enc = encodeURIComponent(key);
+    const results = await Promise.all(
+      itemIds.map(id =>
+        fetch(`https://api.torn.com/v2/market/${id}/itemmarket?key=${enc}`)
+          .then(r => r.json())
+          .then(d => ({ id, data: d }))
+          .catch(() => ({ id, data: null }))
+      )
+    );
+
+    results.forEach(({ id, data }) => {
+      if(data && !data.error && data.itemmarket){
+        const listings = data.itemmarket;
+        if(listings.length > 0){
+          // lowest current asking price
+          const lowest = Math.min(...listings.map(l => l.price));
+          marketPrices[id] = lowest;
+        }
+      }
+    });
+
+    $('dot').className='dot';
+    $('infoLabel').textContent=`Prices loaded — ${Object.keys(marketPrices).length}/${itemIds.length} items found on market`;
+    rerender();
+
+  } catch(e){
+    $('dot').className='dot err';
+    $('infoLabel').textContent='Error: '+e.message;
+    $('countryGrid').innerHTML=`<div class="state">Failed to load prices: ${e.message}</div>`;
+  }
+}
+
+function fmt(n){
+  if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+
+function rerender(){
+  if(!Object.keys(marketPrices).length) return;
+
+  const capacity = parseInt($('setCapacity').value)||10;
+  const tClass   = $('setClass').value;
+  const sortBy   = $('setSort').value;
+
+  // Build profit data per country
+  const countryResults = COUNTRIES.map(country => {
+    const travelHrs = (TRAVEL_HOURS[country.key]?.[tClass] || 5) * 2; // round trip
+
+    let totalProfit = 0;
+    let itemsHtml   = '';
+    let totalCost   = 0;
+    let filledSlots = 0;
+
+    // For each item, figure out how many we can fit and what profit we make
+    const itemResults = country.items.map(item => {
+      const sellPrice = marketPrices[item.id] || null;
+      const profit    = sellPrice ? sellPrice - item.buyPrice : null;
+      return { ...item, sellPrice, profit };
+    }).filter(i => i.profit !== null && i.profit > 0)
+      .sort((a,b) => b.profit - a.profit);
+
+    // Fill capacity with best items
+    let slotsLeft = capacity;
+    itemResults.forEach(item => {
+      if(slotsLeft <= 0) return;
+      const take   = Math.min(slotsLeft, item.qty || slotsLeft);
+      const profit = item.profit * take;
+      const cost   = item.buyPrice * take;
+      totalProfit += profit;
+      totalCost   += cost;
+      filledSlots += take;
+      slotsLeft   -= take;
+
+      itemsHtml += `<div class="item-row">
+        <span class="item-name">${item.name}</span>
+        <span class="item-buy">${fmt(item.buyPrice)}</span>
+        <span class="item-sell">${fmt(item.sellPrice)}</span>
+        <span class="item-profit pos">+${fmt(item.profit)}</span>
+      </div>`;
+    });
+
+    const profitPerHr = travelHrs > 0 ? totalProfit / travelHrs : 0;
+    const margin      = totalCost > 0  ? (totalProfit / totalCost) * 100 : 0;
+
+    return { country, totalProfit, profitPerHr, margin, travelHrs, itemsHtml, totalCost, filledSlots };
+  });
+
+  // Sort
+  countryResults.sort((a,b) => {
+    if(sortBy === 'phr')    return b.profitPerHr  - a.profitPerHr;
+    if(sortBy === 'total')  return b.totalProfit  - a.totalProfit;
+    if(sortBy === 'margin') return b.margin       - a.margin;
+    return 0;
+  });
+
+  const bestPhr = Math.max(...countryResults.map(r => r.profitPerHr));
+
+  let html = '';
+  countryResults.forEach(r => {
+    if(r.totalProfit <= 0){
+      html += `<div class="country-card">
+        <div class="country-head">
+          <span class="country-flag">${r.country.flag}</span>
+          <div>
+            <div class="country-name">${r.country.name}</div>
+            <div class="country-travel">${r.travelHrs.toFixed(1)}h round trip</div>
+          </div>
+        </div>
+        <div class="country-body" style="color:var(--muted);font-size:11px;padding:14px 18px">
+          No profitable items found at current market prices.
+        </div>
+      </div>`;
+      return;
+    }
+
+    const isBest = Math.abs(r.profitPerHr - bestPhr) < 1;
+
+    html += `<div class="country-card ${isBest?'best':''}">
+      <div class="country-head">
+        <span class="country-flag">${r.country.flag}</span>
+        <div>
+          <div class="country-name">${r.country.name}</div>
+          <div class="country-travel">&#9992; ${r.travelHrs.toFixed(1)}h round trip &nbsp;·&nbsp; ${r.filledSlots}/${capacity} slots</div>
+        </div>
+      </div>
+      <div class="country-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:2px;font-size:9px;color:var(--muted);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)">
+          <span>ITEM</span><span style="text-align:right">BUY</span><span style="text-align:right">SELL</span><span style="text-align:right">PROFIT</span>
+        </div>
+        ${r.itemsHtml || '<div style="color:var(--muted);font-size:10px">No items</div>'}
+        <div class="country-summary">
+          <div>
+            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">TRIP PROFIT</div>
+            <div class="summary-val" style="color:var(--green)">${fmt(r.totalProfit)}</div>
+          </div>
+          <div>
+            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">PER HOUR</div>
+            <div class="summary-val" style="color:var(--amber)">${fmt(r.profitPerHr)}/hr</div>
+          </div>
+          <div>
+            <div style="color:var(--muted);font-size:9px;margin-bottom:2px">MARGIN</div>
+            <div class="summary-val" style="color:var(--blue)">${r.margin.toFixed(0)}%</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  $('countryGrid').innerHTML = html || '<div class="state">No profitable routes found.</div>';
+}
+</script>
+</body>
+</html>
