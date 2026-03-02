@@ -296,8 +296,16 @@ async function fetchAll(){
       }
     });
 
+    const foundCount = Object.keys(marketPrices).length;
+    if(foundCount === 0){
+      $('dot').className = 'dot err';
+      $('infoLabel').textContent = 'No market prices found — check API key or CORS. See console for details.';
+      $('countryGrid').innerHTML = `<div class="state">No market prices were returned. Ensure your Torn API key is correct and that the API is reachable from this page. If you opened this file directly (file://), CORS may block requests — try serving the file over a local HTTP server and check the browser console for errors.</div>`;
+      return;
+    }
+
     $('dot').className='dot';
-    $('infoLabel').textContent=`Prices loaded — ${Object.keys(marketPrices).length}/${itemIds.length} items found on market`;
+    $('infoLabel').textContent=`Prices loaded — ${foundCount}/${itemIds.length} items found on market`;
     rerender();
 
   } catch(e){
