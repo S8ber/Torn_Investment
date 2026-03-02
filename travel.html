@@ -285,22 +285,33 @@ async function fetchAll(){
       )
     );
 
+    console.log('market API results (first 20):', results.slice(0,20));
+
+    const errors = [];
     results.forEach(({ id, data }) => {
-      if(data && !data.error && data.itemmarket){
+      if(!data){
+        errors.push({ id, type: 'network' });
+        return;
+      }
+      if(data.error){
+        errors.push({ id, type: 'api', error: data.error });
+        return;
+      }
+      if(data.itemmarket && data.itemmarket.length > 0){
         const listings = data.itemmarket;
-        if(listings.length > 0){
-          // lowest current asking price
-          const lowest = Math.min(...listings.map(l => l.price));
-          marketPrices[id] = lowest;
-        }
+        const lowest = Math.min(...listings.map(l => l.price));
+        marketPrices[id] = lowest;
       }
     });
 
     const foundCount = Object.keys(marketPrices).length;
     if(foundCount === 0){
       $('dot').className = 'dot err';
-      $('infoLabel').textContent = 'No market prices found — check API key or CORS. See console for details.';
-      $('countryGrid').innerHTML = `<div class="state">No market prices were returned. Ensure your Torn API key is correct and that the API is reachable from this page. If you opened this file directly (file://), CORS may block requests — try serving the file over a local HTTP server and check the browser console for errors.</div>`;
+      const networkErrors = errors.filter(e=>e.type==='network').length;
+      const apiErrors = errors.filter(e=>e.type==='api').length;
+      $('infoLabel').textContent = `No market prices — ${networkErrors} network / ${apiErrors} API errors. See console for details.`;
+      $('countryGrid').innerHTML = `<div class="state">No market prices were returned. Ensure your Torn API key is correct and that the API is reachable from this page.<br><br>If you opened this file directly (file://), CORS may block requests — serve the file over a local HTTP server. Open the browser console (F12) and inspect the "market API results" log for response details.</div>`;
+      console.log('detailed API/results errors:', errors.slice(0,50));
       return;
     }
 
