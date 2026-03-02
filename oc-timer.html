@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torn · OC Timer</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#080c10;--panel:#0b1219;--border:#1a2a1f;--green:#00ff88;--green-dim:#00cc6a;
+    --green-glow:rgba(0,255,136,0.15);--red:#ff3860;--amber:#ffb347;--blue:#4fc3f7;
+    --text:#c8e6d0;--muted:#4a6b52}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh}
+  body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:9999;
+    background:repeating-linear-gradient(to bottom,transparent,transparent 2px,rgba(0,0,0,0.07) 2px,rgba(0,0,0,0.07) 4px)}
+  body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);background-size:40px 40px}
+  .wrap{max-width:900px;margin:0 auto;padding:32px 20px;position:relative;z-index:1}
+  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px}
+  h1{font-family:'Orbitron',monospace;font-size:clamp(18px,3.5vw,28px);font-weight:900;
+    color:var(--green);text-shadow:0 0 30px rgba(0,255,136,0.5)}
+  .sub{font-size:10px;color:var(--muted);letter-spacing:0.3em;margin-top:5px}
+  .nav-btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;border-radius:4px;
+    text-decoration:none;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap;align-self:center}
+  .nav-btn:hover{background:var(--green-glow)}
+  .key-bar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+  .key-bar input{flex:1;min-width:220px;background:var(--panel);border:1px solid var(--border);
+    color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;
+    padding:10px 14px;border-radius:4px;outline:none;transition:border-color 0.2s}
+  .key-bar input:focus{border-color:rgba(0,255,136,0.4)}
+  .key-bar input::placeholder{color:var(--muted)}
+  .btn{background:none;border:1px solid rgba(0,255,136,0.35);color:var(--green);
+    font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 18px;
+    border-radius:4px;cursor:pointer;letter-spacing:0.1em;transition:background 0.2s;white-space:nowrap}
+  .btn:hover{background:var(--green-glow)}
+  .info-strip{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:10px 16px;
+    background:var(--panel);border:1px solid var(--border);border-radius:4px;
+    margin-bottom:20px;font-size:11px;min-height:42px}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);margin-right:6px;animation:blink 2s infinite}
+  .dot.idle{background:var(--muted);box-shadow:none;animation:none}
+  .dot.err{background:var(--red);box-shadow:0 0 8px var(--red);animation:none}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;
+    border-bottom:1px solid var(--border);margin-top:28px}
+  .sec-head h2{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase}
+
+  /* Nerve gauge */
+  .nerve-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:22px 26px;margin-bottom:20px}
+  .nerve-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px}
+  .nerve-val{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,0.4)}
+  .nerve-max{font-size:14px;color:var(--muted);margin-left:4px}
+  .nerve-bar-bg{height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-bottom:8px}
+  .nerve-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green-dim),var(--green));
+    box-shadow:0 0 8px var(--green);transition:width 1s linear}
+  .nerve-refill-row{display:flex;gap:8px;align-items:center;font-size:11px;color:var(--muted)}
+  .nerve-cd{font-family:'Orbitron',monospace;font-size:13px;color:var(--amber)}
+  .nerve-cd.full{color:var(--green);animation:blink 1s infinite}
+
+  /* OC list */
+  .oc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .oc-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:16px 18px;position:relative;overflow:hidden;transition:border-color 0.2s}
+  .oc-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+  .oc-card.ready{border-color:rgba(0,255,136,0.5)}
+  .oc-card.ready::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+  .oc-card.soon{border-color:rgba(255,179,71,0.4)}
+  .oc-name{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text);margin-bottom:4px}
+  .oc-nerve{font-size:10px;color:var(--muted);margin-bottom:10px}
+  .oc-nerve span{color:var(--amber)}
+  .oc-status{font-family:'Orbitron',monospace;font-size:13px;font-weight:700}
+  .oc-status.ready{color:var(--green);text-shadow:0 0 10px rgba(0,255,136,0.4)}
+  .oc-status.soon{color:var(--amber)}
+  .oc-status.waiting{color:var(--muted)}
+  .oc-sub{font-size:9px;color:var(--muted);margin-top:3px}
+  .oc-prog{height:3px;background:rgba(255,255,255,0.04);border-radius:2px;overflow:hidden;margin-top:8px}
+  .oc-prog-fill{height:100%;border-radius:2px;transition:width 1s linear}
+
+  /* Manual section */
+  .manual-panel{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:18px 22px}
+  .manual-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .manual-lbl{font-size:10px;color:var(--muted);min-width:120px}
+  .manual-input{background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:'Share Tech Mono',monospace;font-size:12px;padding:7px 10px;
+    border-radius:4px;outline:none;width:100px}
+  .manual-input:focus{border-color:rgba(0,255,136,0.4)}
+  .manual-result{margin-top:12px;padding:12px 16px;background:var(--bg);border:1px solid var(--border);border-radius:4px;font-size:11px;line-height:2;display:none}
+  .watermark{position:fixed;bottom:14px;right:18px;z-index:9998;font-family:'Share Tech Mono',monospace;
+    font-size:10px;color:rgba(0,255,136,0.18);letter-spacing:0.12em;pointer-events:none;
+    text-shadow:0 0 8px rgba(0,255,136,0.1);user-select:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>OC NERVE TIMER</h1>
+      <div class="sub">Organized Crime &amp; Nerve Tracker</div>
+    </div>
+    <a class="nav-btn" href="index.html">&larr; Banking/Stocks</a>
+  </header>
+
+  <div class="key-bar">
+    <input type="password" id="keyInput" placeholder="Torn API key..." autocomplete="off"/>
+    <button class="btn" onclick="fetchAll()">&#9654; FETCH</button>
+  </div>
+
+  <div class="info-strip">
+    <span class="dot idle" id="dot"></span>
+    <span id="infoLabel" style="color:var(--muted)">Enter your API key and click Fetch.</span>
+  </div>
+
+  <!-- Nerve Gauge -->
+  <div id="nerveSection" style="display:none">
+    <div class="sec-head"><h2>Current Nerve</h2></div>
+    <div class="nerve-panel">
+      <div class="nerve-top">
+        <div>
+          <div>
+            <span class="nerve-val" id="nerveCur">--</span>
+            <span class="nerve-max" id="nerveMax">/ --</span>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px">Natural nerve refills 1 every 5 minutes</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Full nerve in</div>
+          <div class="nerve-cd" id="nerveFullCd">--</div>
+        </div>
+      </div>
+      <div class="nerve-bar-bg"><div class="nerve-bar-fill" id="nerveBar" style="width:0%"></div></div>
+      <div class="nerve-refill-row">
+        <span>Next +1 nerve in:</span>
+        <span class="nerve-cd" id="nerveNextCd">--</span>
+        <span style="margin-left:16px">Refill rate: 1 per 5 min</span>
+      </div>
+    </div>
+
+    <!-- OC Windows -->
+    <div class="sec-head"><h2>OC Windows</h2></div>
+    <div class="oc-grid" id="ocGrid"></div>
+  </div>
+
+  <!-- Manual Calculator (no API) -->
+  <div class="sec-head" style="margin-top:28px"><h2>Manual Calculator</h2></div>
+  <div class="manual-panel">
+    <div style="font-size:10px;color:var(--muted);margin-bottom:14px">
+      No API key? Enter your stats manually to calculate nerve windows.
+    </div>
+    <div class="manual-row">
+      <span class="manual-lbl">Current nerve</span>
+      <input class="manual-input" type="number" id="mCur" placeholder="e.g. 42" oninput="calcManual()"/>
+    </div>
+    <div class="manual-row">
+      <span class="manual-lbl">Max nerve</span>
+      <input class="manual-input" type="number" id="mMax" placeholder="e.g. 60" oninput="calcManual()"/>
+    </div>
+    <div class="manual-result" id="manualResult"></div>
+  </div>
+
+  <div style="margin-top:28px;padding:12px 16px;background:var(--panel);border:1px solid var(--border);
+    border-radius:4px;font-size:10px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+    <span>Read-only API &nbsp;·&nbsp; Key in session only &nbsp;·&nbsp;
+      <code style="color:var(--green)">GET /v2/user</code></span>
+  </div>
+</div>
+
+<div class="watermark">S8ber [3901859]</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let nerveData = null;
+let tickInt   = null;
+
+// Torn OCs with nerve costs
+const OCS = [
+  { name:'Theft',             nerve:2  },
+  { name:'Car Theft',         nerve:5  },
+  { name:'Counterfeiting',    nerve:10 },
+  { name:'Fraud',             nerve:10 },
+  { name:'Extortion',         nerve:20 },
+  { name:'Cyber Crime',       nerve:20 },
+  { name:'Bank Robbery',      nerve:25 },
+  { name:'Assassination',     nerve:30 },
+  { name:'Kidnapping',        nerve:50 },
+  { name:'Planned Robbery',   nerve:50 },
+];
+
+function getKey(){ return sessionStorage.getItem('tornOcKey')||''; }
+
+window.addEventListener('DOMContentLoaded',()=>{
+  const k = getKey();
+  if(k){ $('keyInput').value='(saved)'; fetchAll(); }
+});
+
+async function fetchAll(){
+  const raw = $('keyInput').value.trim();
+  const key = (raw && raw!=='(saved)') ? raw : getKey();
+  if(!key){ alert('Enter your API key.'); return; }
+  sessionStorage.setItem('tornOcKey', key);
+
+  $('dot').className='dot';
+  $('infoLabel').textContent='Fetching nerve data...';
+
+  try {
+    const res  = await fetch(`https://api.torn.com/v2/user?selections=basic,bars&key=${encodeURIComponent(key)}`);
+    const data = await res.json();
+    if(data.error){
+      $('dot').className='dot err';
+      $('infoLabel').textContent=`API error ${data.error.code}: ${data.error.error}`;
+      return;
+    }
+
+    const bars = data.bars || {};
+    const nerve = bars.nerve || {};
+    nerveData = {
+      current:   nerve.current  || 0,
+      maximum:   nerve.maximum  || 60,
+      ticksAt:   Math.floor(Date.now()/1000) + ((nerve.ticktime || 300)),
+      refillSec: nerve.ticktime || 300,
+      fetchedAt: Math.floor(Date.now()/1000),
+    };
+
+    $('dot').className='dot';
+    $('infoLabel').textContent=`Loaded — ${data.name||''} [${data.player_id||''}]`;
+    $('nerveSection').style.display='block';
+
+    renderNerve();
+    renderOcGrid();
+
+    if(tickInt) clearInterval(tickInt);
+    tickInt = setInterval(()=>{ nerveData.current = calcCurrentNerve(); renderNerve(); renderOcGrid(); }, 1000);
+
+  } catch(e){
+    $('dot').className='dot err';
+    $('infoLabel').textContent='Error: '+e.message;
+  }
+}
+
+function calcCurrentNerve(){
+  if(!nerveData) return 0;
+  const now      = Math.floor(Date.now()/1000);
+  const elapsed  = now - nerveData.fetchedAt;
+  const gained   = Math.floor(elapsed / nerveData.refillSec);
+  return Math.min(nerveData.maximum, nerveData.current + gained);
+}
+
+function fmtT(s){
+  if(s<=0) return 'NOW';
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+  if(h>0) return h+'h '+m+'m';
+  if(m>0) return m+'m '+sec+'s';
+  return sec+'s';
+}
+
+function renderNerve(){
+  if(!nerveData) return;
+  const cur = calcCurrentNerve();
+  const max = nerveData.maximum;
+  const pct = Math.min(100, (cur/max)*100);
+
+  $('nerveCur').textContent = cur;
+  $('nerveMax').textContent = '/ '+max;
+  $('nerveBar').style.width = pct+'%';
+
+  const now = Math.floor(Date.now()/1000);
+  const nerveNeeded = max - cur;
+  const secsToFull  = nerveNeeded * nerveData.refillSec;
+
+  if(nerveNeeded <= 0){
+    $('nerveFullCd').textContent = 'FULL';
+    $('nerveFullCd').className   = 'nerve-cd full';
+    $('nerveNextCd').textContent = '--';
+  } else {
+    $('nerveFullCd').textContent = fmtT(secsToFull);
+    $('nerveFullCd').className   = 'nerve-cd';
+    // Time to next +1
+    const elapsed = now - nerveData.fetchedAt;
+    const secsIntoTick = elapsed % nerveData.refillSec;
+    const secsToNext   = nerveData.refillSec - secsIntoTick;
+    $('nerveNextCd').textContent = fmtT(secsToNext);
+  }
+}
+
+function renderOcGrid(){
+  if(!nerveData) return;
+  const cur  = calcCurrentNerve();
+  const max  = nerveData.maximum;
+
+  let html = '';
+  OCS.forEach(oc => {
+    if(oc.nerve > max) return; // never possible with this nerve cap
+    const canDo   = cur >= oc.nerve;
+    const needed  = Math.max(0, oc.nerve - cur);
+    const secWait = needed * nerveData.refillSec;
+    const pct     = Math.min(100, (cur / oc.nerve) * 100);
+
+    let statusClass, statusText, subText;
+    if(canDo){
+      statusClass='ready'; statusText='READY'; subText='You have enough nerve';
+    } else if(secWait < 3600){
+      statusClass='soon'; statusText=fmtT(secWait); subText='Need '+needed+' more nerve';
+    } else {
+      statusClass='waiting'; statusText=fmtT(secWait); subText='Need '+needed+' more nerve';
+    }
+
+    const fillColor = canDo ? 'var(--green)' : secWait < 3600 ? 'var(--amber)' : 'rgba(255,255,255,0.2)';
+
+    html += `<div class="oc-card ${canDo?'ready':secWait<3600?'soon':''}">
+      <div class="oc-name">${oc.name}</div>
+      <div class="oc-nerve">Costs <span>${oc.nerve}</span> nerve</div>
+      <div class="oc-status ${statusClass}">${statusText}</div>
+      <div class="oc-sub">${subText}</div>
+      <div class="oc-prog"><div class="oc-prog-fill" style="width:${pct}%;background:${fillColor}"></div></div>
+    </div>`;
+  });
+
+  $('ocGrid').innerHTML = html;
+}
+
+function calcManual(){
+  const cur = parseInt($('mCur').value)||0;
+  const max = parseInt($('mMax').value)||0;
+  if(!cur || !max || cur > max){ $('manualResult').style.display='none'; return; }
+
+  const REFILL_SEC = 300; // 5 min
+  let rows = '';
+  OCS.forEach(oc => {
+    if(oc.nerve > max) return;
+    const needed  = Math.max(0, oc.nerve - cur);
+    const secWait = needed * REFILL_SEC;
+    const ready   = needed <= 0;
+    rows += `<div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:4px 0">
+      <span style="color:var(--text)">${oc.name}</span>
+      <span style="color:var(--muted);font-size:9px">${oc.nerve} nerve</span>
+      <span style="color:${ready?'var(--green)':'var(--amber)'};min-width:80px;text-align:right">${ready?'READY':fmtT(secWait)}</span>
+    </div>`;
+  });
+
+  $('manualResult').innerHTML = rows;
+  $('manualResult').style.display = 'block';
+}
+</script>
+</body>
+</html>
