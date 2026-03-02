@@ -2,29 +2,14 @@
 
 Real-time investment dashboard for Torn using the official API.
 
-## Quick Start
+Copyright (c) 2026 S8ber
 
-### 1. Install dependencies
-```bash
-pip install -r requirements.txt
-```
+This code is published for viewing purposes only.
 
-### 2. Set your API key
-```bash
-# Linux / macOS
-export TORN_API_KEY=your_16char_key_here
+You may NOT:
+- Copy the code
+- Modify the code
+- Use the code in other projects
+- Redistribute the code
 
-# Windows (PowerShell)
-$env:TORN_API_KEY="your_16char_key_here"
-
-# Windows (cmd)
-set TORN_API_KEY=your_16char_key_here
-```
-
-### 3. Run the server
-```bash
-python app.py
-```
-
-### 4. Open the dashboard
-Visit: http://localhost:5000
+All rights reserved.
