@@ -174,7 +174,6 @@ const $=id=>document.getElementById(id);
 let nerveData = null;
 let tickInt   = null;
 
-// Torn OCs with nerve costs
 const OCS = [
   { name:'Theft',             nerve:2  },
   { name:'Car Theft',         nerve:5  },
@@ -213,25 +212,31 @@ async function fetchAll(){
       return;
     }
 
-    const bars = data.bars || {};
+    const bars  = data.bars  || {};
     const nerve = bars.nerve || {};
+
+    const nowSec    = Math.floor(Date.now()/1000);
+    const curNerve  = nerve.current  || 0;
+    const maxNerve  = nerve.maximum  || 60;
+    // ticktime = seconds until the NEXT +1 nerve tick (not the interval)
+    const secsToNextTick = nerve.ticktime != null ? nerve.ticktime : 300;
+    const REFILL_INTERVAL = 300; // Torn always refills 1 nerve every 5 min
+
     nerveData = {
-      current:   nerve.current  || 0,
-      maximum:   nerve.maximum  || 60,
-      ticksAt:   Math.floor(Date.now()/1000) + ((nerve.ticktime || 300)),
-      refillSec: nerve.ticktime || 300,
-      fetchedAt: Math.floor(Date.now()/1000),
+      baseNerve:      curNerve,           // nerve at fetch time — never mutated
+      maximum:        maxNerve,
+      fetchedAt:      nowSec,             // wall-clock seconds at fetch
+      nextTickAt:     nowSec + secsToNextTick,  // absolute timestamp of next +1
+      refillInterval: REFILL_INTERVAL,
     };
 
     $('dot').className='dot';
     $('infoLabel').textContent=`Loaded — ${data.name||''} [${data.player_id||''}]`;
     $('nerveSection').style.display='block';
 
-    renderNerve();
-    renderOcGrid();
-
     if(tickInt) clearInterval(tickInt);
-    tickInt = setInterval(()=>{ nerveData.current = calcCurrentNerve(); renderNerve(); renderOcGrid(); }, 1000);
+    tickInt = setInterval(tick, 1000);
+    tick();
 
   } catch(e){
     $('dot').className='dot err';
@@ -239,12 +244,33 @@ async function fetchAll(){
   }
 }
 
+// Pure calculation — never mutates nerveData
 function calcCurrentNerve(){
   if(!nerveData) return 0;
-  const now      = Math.floor(Date.now()/1000);
-  const elapsed  = now - nerveData.fetchedAt;
-  const gained   = Math.floor(elapsed / nerveData.refillSec);
-  return Math.min(nerveData.maximum, nerveData.current + gained);
+  const nowSec  = Math.floor(Date.now()/1000);
+  const elapsed = nowSec - nerveData.fetchedAt;
+  // How many full 5-min ticks have passed since fetch?
+  // First tick happens at nextTickAt, then every 300s after
+  const secsToFirst = nerveData.nextTickAt - nerveData.fetchedAt;
+  let gained = 0;
+  if(elapsed >= secsToFirst){
+    // +1 for the first tick, then +1 for every 300s after
+    gained = 1 + Math.floor((elapsed - secsToFirst) / nerveData.refillInterval);
+  }
+  return Math.min(nerveData.maximum, nerveData.baseNerve + gained);
+}
+
+// Returns seconds until the next +1 nerve tick
+function secsToNextNerveTick(){
+  if(!nerveData) return 0;
+  const nowSec = Math.floor(Date.now()/1000);
+  // Time until the absolute next tick timestamp
+  const secsToFirst = nerveData.nextTickAt - nowSec;
+  if(secsToFirst > 0) return secsToFirst;
+  // First tick already passed — find next one in the repeating cycle
+  const passedSinceFirst = nowSec - nerveData.nextTickAt;
+  const posInCycle = passedSinceFirst % nerveData.refillInterval;
+  return nerveData.refillInterval - posInCycle;
 }
 
 function fmtT(s){
@@ -253,6 +279,11 @@ function fmtT(s){
   if(h>0) return h+'h '+m+'m';
   if(m>0) return m+'m '+sec+'s';
   return sec+'s';
+}
+
+function tick(){
+  renderNerve();
+  renderOcGrid();
 }
 
 function renderNerve(){
@@ -265,22 +296,19 @@ function renderNerve(){
   $('nerveMax').textContent = '/ '+max;
   $('nerveBar').style.width = pct+'%';
 
-  const now = Math.floor(Date.now()/1000);
   const nerveNeeded = max - cur;
-  const secsToFull  = nerveNeeded * nerveData.refillSec;
 
   if(nerveNeeded <= 0){
     $('nerveFullCd').textContent = 'FULL';
     $('nerveFullCd').className   = 'nerve-cd full';
     $('nerveNextCd').textContent = '--';
   } else {
-    $('nerveFullCd').textContent = fmtT(secsToFull);
+    // Full nerve = time to next tick + (nerveNeeded-1) more intervals after that
+    const toNext  = secsToNextNerveTick();
+    const toFull  = toNext + (nerveNeeded - 1) * nerveData.refillInterval;
+    $('nerveFullCd').textContent = fmtT(toFull);
     $('nerveFullCd').className   = 'nerve-cd';
-    // Time to next +1
-    const elapsed = now - nerveData.fetchedAt;
-    const secsIntoTick = elapsed % nerveData.refillSec;
-    const secsToNext   = nerveData.refillSec - secsIntoTick;
-    $('nerveNextCd').textContent = fmtT(secsToNext);
+    $('nerveNextCd').textContent = fmtT(toNext);
   }
 }
 
